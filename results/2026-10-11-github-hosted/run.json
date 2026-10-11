@@ -1,7 +1,7 @@
 {
   "schema": "polyglot-benchmark-lab.run.v1",
-  "started_at": "2026-10-11T02:22:02.434472+00:00",
-  "commit": "cc681873fec0236e95dd5903ccbaec6e69b1e75b",
+  "started_at": "2026-10-11T02:46:59.422300+00:00",
+  "commit": "d8dc6682374b4374de2559e3ed48482ea576b664",
   "runner": {
     "kind": "github-hosted",
     "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
@@ -21,12 +21,16 @@
   "load_generator": "oha 1.16.0",
   "lanes": [
     "python-fastapi",
-    "typescript-fastify"
+    "typescript-fastify",
+    "go-nethttp",
+    "rust-axum"
   ],
   "workloads": [
     "W1-json",
     "W2-hash",
     "W3-http-read",
+    "W4-http-db",
     "W5-cold-start"
-  ]
+  ],
+  "database": "postgres service container"
 }
