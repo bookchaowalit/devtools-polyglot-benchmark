@@ -4,7 +4,7 @@ Each language implements the same workloads. A lane must pass the same
 contract tests before it is measured, and every published number keeps its
 run record (commit, runner, runtime versions, settings).
 
-Results page: see `site/` (deployed with Vercel). Raw data: `results/`.
+Results page: <https://polyglot-benchmark-lab.vercel.app> (`site/`). Raw data: `results/`.
 
 ## Lanes
 
@@ -56,6 +56,13 @@ python runner/build_site.py                # results → site/data.json
 
 The full run on GitHub-hosted runners is `.github/workflows/bench.yml`: manual
 dispatch plus a weekly schedule. It commits the results back to this repository.
+
+## Deploy
+
+The Vercel project is connected to this repository with root directory
+`site/`. Every push to `main`, including the bench workflow's results
+commit, deploys the page; there is no manual step. A manual deploy, if ever
+needed, runs from the repository root: `vercel deploy --prod`.
 
 ## Limits
 
