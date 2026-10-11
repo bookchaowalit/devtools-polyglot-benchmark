@@ -4,7 +4,7 @@
     python runner/run.py --quick               # smoke run: short, one repeat, not for publishing
     python runner/run.py --lanes python-fastapi --workloads W3-http-read
 
-Writes results/<YYYY-MM-DD>-<runner>/<workload>.<lane>.json and run.json.
+Writes results/<YYYY-MM-DDTHHMMZ>-<runner>/<workload>.<lane>.json and run.json.
 A lane that fails its contract gets a result with contract_passed=false and no metrics.
 """
 
@@ -198,7 +198,7 @@ def main() -> int:
     s = settings(args.quick)
     info = runner_info()
     stamp = dt.datetime.now(dt.timezone.utc)
-    out = args.out or ROOT / "results" / f"{stamp:%Y-%m-%d}-{info['kind']}{'-quick' if args.quick else ''}"
+    out = args.out or ROOT / "results" / f"{stamp:%Y-%m-%dT%H%MZ}-{info['kind']}{'-quick' if args.quick else ''}"
     out.mkdir(parents=True, exist_ok=True)
     commit = git_commit()
     workloads = list(args.workloads)
