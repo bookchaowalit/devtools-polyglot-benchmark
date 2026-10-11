@@ -5,3 +5,4 @@ impl/typescript/node_modules/
 impl/typescript/dist/
 __pycache__/
 .vercel/
+.env*
