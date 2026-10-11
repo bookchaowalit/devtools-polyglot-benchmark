@@ -16,6 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PY = str(ROOT / "impl/python/.venv/bin/python")
 TS = ROOT / "impl/typescript/dist"
+GO = ROOT / "impl/go/bin"
+RS = ROOT / "impl/rust/target/release"
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,24 @@ LANES: dict[str, Lane] = {
             w1=["node", str(TS / "w1-json.js")],
             w2=["node", str(TS / "w2-hash.js")],
             server=["node", str(TS / "server.js")],
+        ),
+        Lane(
+            id="go-nethttp",
+            language="go",
+            framework="net/http",
+            version_cmd=["go", "version"],
+            w1=[str(GO / "w1-json")],
+            w2=[str(GO / "w2-hash")],
+            server=[str(GO / "server")],
+        ),
+        Lane(
+            id="rust-axum",
+            language="rust",
+            framework="axum+tokio",
+            version_cmd=["rustc", "--version"],
+            w1=[str(RS / "w1-json")],
+            w2=[str(RS / "w2-hash")],
+            server=[str(RS / "server")],
         ),
     ]
 }

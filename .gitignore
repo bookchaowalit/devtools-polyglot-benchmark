@@ -6,3 +6,5 @@ impl/typescript/dist/
 __pycache__/
 .vercel/
 .env*
+impl/go/bin/
+impl/rust/target/

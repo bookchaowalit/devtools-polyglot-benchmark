@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import urllib.error
@@ -61,6 +62,17 @@ def check_lane(lane: Lane) -> list[str]:
                 got_status, got_body = _get(srv.url + path)
                 if (got_status, got_body) != (status, body):
                     failures.append(f"W3 {path}: got {got_status} {str(got_body)[:120]}")
+            if os.environ.get("DATABASE_URL"):
+                db_cases = [
+                    ("/db/items?after=0&limit=3", 200, {"items": records[:3]}),
+                    ("/db/items?after=9998", 200, {"items": records[9998:]}),
+                    ("/db/items?after=5&limit=0", 400, {"error": "bad_request"}),
+                    ("/db/items?limit=abc", 400, {"error": "bad_request"}),
+                ]
+                for path, status, body in db_cases:
+                    got_status, got_body = _get(srv.url + path)
+                    if (got_status, got_body) != (status, body):
+                        failures.append(f"W4 {path}: got {got_status} {str(got_body)[:120]}")
     except (RuntimeError, TimeoutError) as err:
         failures.append(f"W3 server: {err}")
     return failures

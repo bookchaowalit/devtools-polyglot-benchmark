@@ -33,7 +33,7 @@ from runner.lanes import LANES, Lane, Server, load_cpus, runtime_version  # noqa
 ROOT = Path(__file__).resolve().parent.parent
 OHA_VERSION = "1.16.0"
 GNU_TIME = "/usr/bin/time"
-WORKLOADS = ["W1-json", "W2-hash", "W3-http-read", "W5-cold-start"]
+WORKLOADS = ["W1-json", "W2-hash", "W3-http-read", "W4-http-db", "W5-cold-start"]
 SCHEMA = "polyglot-benchmark-lab.result.v1"
 
 
@@ -134,10 +134,19 @@ def oha(url: str, seconds: int, concurrency: int) -> dict:
 
 
 def w3(lane: Lane, s: dict) -> dict:
+    # ids 1..9999 all exist, so every request should be a 200
+    return http_load(lane, s, r"/items/[1-9][0-9]{0,3}")
+
+
+def w4(lane: Lane, s: dict) -> dict:
+    # pages of 50 rows from a random starting id; "?" is escaped for oha's regex
+    return http_load(lane, s, r"/db/items\?after=[0-9]{1,4}&limit=50")
+
+
+def http_load(lane: Lane, s: dict, path_regex: str) -> dict:
     rps, p50, p95, p99, errors = [], [], [], [], []
     with Server(lane, ensure_records()) as srv:
-        # ids 1..9999 all exist, so every request should be a 200
-        url = srv.url + r"/items/[1-9][0-9]{0,3}"
+        url = srv.url + path_regex
         oha(url, s["http_warmup_s"], s["concurrency"])
         for _ in range(s["repeats"]):
             r = oha(url, s["http_seconds"], s["concurrency"])
@@ -167,7 +176,7 @@ def w5(lane: Lane, s: dict) -> dict:
     return {"ready_ms": spread(ready)}
 
 
-MEASURES = {"W1-json": w1, "W2-hash": w2, "W3-http-read": w3, "W5-cold-start": w5}
+MEASURES = {"W1-json": w1, "W2-hash": w2, "W3-http-read": w3, "W4-http-db": w4, "W5-cold-start": w5}
 
 
 def settings(quick: bool) -> dict:
@@ -192,17 +201,27 @@ def main() -> int:
     out = args.out or ROOT / "results" / f"{stamp:%Y-%m-%d}-{info['kind']}{'-quick' if args.quick else ''}"
     out.mkdir(parents=True, exist_ok=True)
     commit = git_commit()
+    workloads = list(args.workloads)
+    if "W4-http-db" in workloads:
+        if os.environ.get("DATABASE_URL"):
+            subprocess.run([str(ROOT / "impl/python/.venv/bin/python"), str(ROOT / "runner/seed_db.py")], check=True)
+        else:
+            print("W4-http-db skipped: DATABASE_URL is not set", flush=True)
+            workloads.remove("W4-http-db")
+
+    db = os.environ.get("DATABASE_URL")
     (out / "run.json").write_text(json.dumps(
         {"schema": "polyglot-benchmark-lab.run.v1", "started_at": stamp.isoformat(), "commit": commit,
          "runner": info, "settings": s, "load_generator": f"oha {OHA_VERSION}",
-         "lanes": args.lanes, "workloads": args.workloads}, indent=2) + "\n")
+         "lanes": args.lanes, "workloads": workloads,
+         "database": (("postgres service container" if os.environ.get("GITHUB_ACTIONS") else "local postgres") if db else None)}, indent=2) + "\n")
 
     for lane_id in args.lanes:
         lane = LANES[lane_id]
         failures = check_lane(lane)
         version = runtime_version(lane)
         print(f"{lane_id} ({version}): contract {'PASS' if not failures else 'FAIL'}", flush=True)
-        for wl in args.workloads:
+        for wl in workloads:
             result = {
                 "schema": SCHEMA, "workload": wl, "lane": lane_id, "commit": commit, "runner": info,
                 "runtime": {"language": lane.language, "version": version, "framework": lane.framework},
@@ -219,7 +238,7 @@ def main() -> int:
 
 
 def _headline(wl: str, m: dict) -> dict:
-    if wl == "W3-http-read":
+    if wl in ("W3-http-read", "W4-http-db"):
         return {"rps": round(m["rps"]["median"]), "p95_ms": round(m["p95_ms"]["median"], 2),
                 "rss_mib": round(m["peak_rss_mib"], 1), "errors": m["error_rate"]}
     if wl == "W5-cold-start":

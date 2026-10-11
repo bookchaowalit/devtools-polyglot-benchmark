@@ -8,6 +8,20 @@ permissions:
 jobs:
   contract:
     runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -18,12 +32,22 @@ jobs:
         with:
           node-version: "22"
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: impl/go/go.mod
+          cache-dependency-path: impl/go/go.sum
+      - name: Rust toolchain
+        run: rustup toolchain install stable --profile minimal && rustup default stable
       - name: Install lanes
         run: |
           command -v /usr/bin/time || sudo apt-get install -y time
           uv sync --project impl/python --frozen
           npm ci --prefix impl/typescript
           npm run build --prefix impl/typescript
+          (cd impl/go && go build -o bin/ ./cmd/...)
+          (cd impl/rust && cargo build --release --locked)
+      - name: Seed database
+        run: impl/python/.venv/bin/python runner/seed_db.py
       - name: Contract tests
         run: python -m unittest discover -s tests -v
       - name: Smoke run (not published)

@@ -12,23 +12,30 @@ Results page: see `site/` (deployed with Vercel). Raw data: `results/`.
 |---|---|---|
 | `python-fastapi` | Python 3.12 | FastAPI + uvicorn (one worker, no extras) |
 | `typescript-fastify` | Node 22, compiled with `tsc` | Fastify |
+| `go-nethttp` | Go (pinned in `impl/go/go.mod`) | stdlib `net/http`, pgx pool |
+| `rust-axum` | Rust stable, `--release` | axum + tokio, deadpool-postgres |
 
-Go and Rust lanes come next. Adding a lane means one entry in
+All lanes use a pool of 10 PostgreSQL connections for W4. Adding a lane means one entry in
 `runner/lanes.py`, a directory under `impl/`, and a passing contract.
 
 ## Workloads
 
 See [workloads/README.md](workloads/README.md): `W1-json`, `W2-hash`,
-`W3-http-read`, `W5-cold-start`. `W4-http-db` (PostgreSQL) is planned.
+`W3-http-read`, `W4-http-db`, `W5-cold-start`.
 
 ## Run it
 
-Needs Python 3.12, Node 22, `uv`, and GNU time (`/usr/bin/time`). The runner
+Needs Python 3.12, Node 22, Go, Rust, `uv`, and GNU time (`/usr/bin/time`).
+W4 needs `DATABASE_URL` pointing at a PostgreSQL you can drop a table in
+(the runner seeds `bench_items`); without it, W4 is skipped. The runner
 downloads `oha` 1.16.0 into `.tools/` if it is not on `PATH`.
 
 ```bash
 uv sync --project impl/python
 npm ci --prefix impl/typescript && npm run build --prefix impl/typescript
+(cd impl/go && go build -o bin/ ./cmd/...)
+(cd impl/rust && cargo build --release)
+impl/python/.venv/bin/python runner/seed_db.py   # only with DATABASE_URL
 python -m unittest discover -s tests       # contract, including a deliberately wrong lane
 python runner/run.py --quick --out .cache/quick   # smoke run, never published
 python runner/run.py                       # full run → results/<date>-<runner>/
