@@ -2,9 +2,10 @@
 
     python runner/run.py                       # all lanes, all workloads, full settings
     python runner/run.py --quick               # smoke run: short, one repeat, not for publishing
+    python runner/run.py --group python-variants   # variants + their parent, same VM
     python runner/run.py --lanes python-fastapi --workloads W3-http-read
 
-Writes results/<YYYY-MM-DDTHHMMZ>-<runner>/<workload>.<lane>.json and run.json.
+Writes results/<YYYY-MM-DDTHHMMZ>-<runner>-<group>/<workload>.<lane>.json and run.json.
 A lane that fails its contract gets a result with contract_passed=false and no metrics.
 """
 
@@ -28,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from contract.check import check_lane  # noqa: E402
 from contract.fixtures import BLOB_BYTES, ensure_blob, ensure_records  # noqa: E402
-from runner.lanes import LANES, Lane, Server, load_cpus, runtime_version  # noqa: E402
+from runner.lanes import GROUPS, LANES, Lane, Server, lanes_in, load_cpus, runtime_version  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 OHA_VERSION = "1.16.0"
@@ -75,7 +76,7 @@ def _cpu_model() -> str:
     return platform.processor()
 
 
-def run_child(cmd: list[str]) -> tuple[float, float]:
+def run_child(cmd: list[str], env: dict[str, str]) -> tuple[float, float]:
     """Return (wall seconds, peak RSS MiB) for one child process.
 
     Peak RSS comes from GNU time, not from our own wait4: a child spawned from
@@ -86,7 +87,7 @@ def run_child(cmd: list[str]) -> tuple[float, float]:
         start = time.perf_counter()
         proc = subprocess.run(
             [GNU_TIME, "-f", "%M", "-o", rss_file.name, *cmd],
-            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, env={**os.environ, **env},
         )
         wall = time.perf_counter() - start
         if proc.returncode != 0:
@@ -98,24 +99,24 @@ def spread(values: list[float]) -> dict:
     return {"median": statistics.median(values), "min": min(values), "max": max(values), "runs": values}
 
 
-def measure_cli(cmd: list[str], warmup: int, repeats: int) -> tuple[list[float], list[float]]:
+def measure_cli(cmd: list[str], env: dict[str, str], warmup: int, repeats: int) -> tuple[list[float], list[float]]:
     for _ in range(warmup):
-        run_child(cmd)
+        run_child(cmd, env)
     walls, rss = [], []
     for _ in range(repeats):
-        w, r = run_child(cmd)
+        w, r = run_child(cmd, env)
         walls.append(w)
         rss.append(r)
     return walls, rss
 
 
 def w1(lane: Lane, s: dict) -> dict:
-    walls, rss = measure_cli(lane.w1 + [str(ensure_records())], s["cli_warmup"], s["repeats"])
+    walls, rss = measure_cli(lane.w1 + [str(ensure_records())], lane.env, s["cli_warmup"], s["repeats"])
     return {"wall_ms": spread([w * 1000 for w in walls]), "peak_rss_mib": max(rss)}
 
 
 def w2(lane: Lane, s: dict) -> dict:
-    walls, rss = measure_cli(lane.w2 + [str(ensure_blob())], s["cli_warmup"], s["repeats"])
+    walls, rss = measure_cli(lane.w2 + [str(ensure_blob())], lane.env, s["cli_warmup"], s["repeats"])
     mib = BLOB_BYTES / (1024 * 1024)
     return {
         "wall_ms": spread([w * 1000 for w in walls]),
@@ -189,16 +190,19 @@ def settings(quick: bool) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--lanes", nargs="*", default=list(LANES))
+    ap.add_argument("--group", choices=GROUPS, default="core",
+                    help="lane group; a variant group also runs its parents, in the same job")
+    ap.add_argument("--lanes", nargs="*", help="override the group's lanes")
     ap.add_argument("--workloads", nargs="*", default=WORKLOADS)
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args()
+    args.lanes = args.lanes or lanes_in(args.group)
 
     s = settings(args.quick)
     info = runner_info()
     stamp = dt.datetime.now(dt.timezone.utc)
-    out = args.out or ROOT / "results" / f"{stamp:%Y-%m-%dT%H%MZ}-{info['kind']}{'-quick' if args.quick else ''}"
+    out = args.out or ROOT / "results" / f"{stamp:%Y-%m-%dT%H%MZ}-{info['kind']}-{args.group}{'-quick' if args.quick else ''}"
     out.mkdir(parents=True, exist_ok=True)
     commit = git_commit()
     workloads = list(args.workloads)
@@ -213,7 +217,7 @@ def main() -> int:
     (out / "run.json").write_text(json.dumps(
         {"schema": "polyglot-benchmark-lab.run.v1", "started_at": stamp.isoformat(), "commit": commit,
          "runner": info, "settings": s, "load_generator": f"oha {OHA_VERSION}",
-         "lanes": args.lanes, "workloads": workloads,
+         "group": args.group, "lanes": args.lanes, "workloads": workloads,
          "database": (("postgres service container" if os.environ.get("GITHUB_ACTIONS") else "local postgres") if db else None)}, indent=2) + "\n")
 
     for lane_id in args.lanes:
@@ -221,9 +225,10 @@ def main() -> int:
         failures = check_lane(lane)
         version = runtime_version(lane)
         print(f"{lane_id} ({version}): contract {'PASS' if not failures else 'FAIL'}", flush=True)
-        for wl in workloads:
+        for wl in [w for w in workloads if w in lane.workloads]:
             result = {
                 "schema": SCHEMA, "workload": wl, "lane": lane_id, "commit": commit, "runner": info,
+                "group": args.group, "parent": lane.parent, "change": lane.change,
                 "runtime": {"language": lane.language, "version": version, "framework": lane.framework},
                 "settings": s, "contract_passed": not failures,
             }

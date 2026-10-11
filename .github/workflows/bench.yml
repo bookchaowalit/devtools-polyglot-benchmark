@@ -10,6 +10,12 @@ concurrency:
   cancel-in-progress: false
 jobs:
   bench:
+    # One job per lane group. A variant group also runs its parent lane, so
+    # each comparison is made on one VM; groups run in parallel on different VMs.
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [core, python-variants]
     runs-on: ubuntu-24.04
     services:
       postgres:
@@ -45,6 +51,7 @@ jobs:
         run: |
           command -v /usr/bin/time || sudo apt-get install -y time
           uv sync --project impl/python --frozen
+          UV_PROJECT_ENVIRONMENT=$PWD/impl/python/.venv313 uv sync --project impl/python --python 3.13 --frozen
           npm ci --prefix impl/typescript
           npm run build --prefix impl/typescript
           (cd impl/go && go build -o bin/ ./cmd/...)
@@ -54,9 +61,29 @@ jobs:
       - name: Contract tests
         run: python -m unittest discover -s tests -v
       - name: Measure
-        run: python runner/run.py
+        run: python runner/run.py --group ${{ matrix.group }}
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: results-${{ matrix.group }}
+          # .gitkeep keeps results/ as the common root, so the run folder name survives the upload
+          path: |
+            results/.gitkeep
+            results/*-${{ matrix.group }}/
+          if-no-files-found: error
+
+  publish:
+    needs: bench
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          pattern: results-*
+          path: results
+          merge-multiple: true
       - name: Build site data
-        run: python runner/build_site.py
+        run: python3 runner/build_site.py
       - name: Commit results
         run: |
           git config user.name "github-actions[bot]"

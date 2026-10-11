@@ -15,6 +15,20 @@ Results page: <https://polyglot-benchmark-lab.vercel.app> (`site/`). Raw data: `
 | `go-nethttp` | Go (pinned in `impl/go/go.mod`) | stdlib `net/http`, pgx pool |
 | `rust-axum` | Rust stable, `--release` | axum + tokio, deadpool-postgres |
 
+### Variant lanes
+
+A variant changes exactly one thing against its parent and runs in the same
+job, so both are measured on the same VM. The page shows it as a percentage
+of the parent. Groups (`core`, `python-variants`) run as parallel jobs.
+
+| Variant | Parent | The one change |
+|---|---|---|
+| `python-fastapi+uvloop` | `python-fastapi` | uvloop + httptools (`uvicorn[standard]`) |
+| `python-fastapi+orjson` | `python-fastapi` | `ORJSONResponse`; orjson in W1 |
+| `python-fastapi+asyncpg` | `python-fastapi` | asyncpg pool instead of psycopg_pool |
+| `python-fastapi+2workers` | `python-fastapi` | 2 uvicorn workers, 5 DB connections each |
+| `python-fastapi+py313` | `python-fastapi` | CPython 3.13 |
+
 All lanes use a pool of 10 PostgreSQL connections for W4. Adding a lane means one entry in
 `runner/lanes.py`, a directory under `impl/`, and a passing contract.
 
@@ -32,13 +46,15 @@ downloads `oha` 1.16.0 into `.tools/` if it is not on `PATH`.
 
 ```bash
 uv sync --project impl/python
+UV_PROJECT_ENVIRONMENT=$PWD/impl/python/.venv313 uv sync --project impl/python --python 3.13
 npm ci --prefix impl/typescript && npm run build --prefix impl/typescript
 (cd impl/go && go build -o bin/ ./cmd/...)
 (cd impl/rust && cargo build --release)
 impl/python/.venv/bin/python runner/seed_db.py   # only with DATABASE_URL
 python -m unittest discover -s tests       # contract, including a deliberately wrong lane
 python runner/run.py --quick --out .cache/quick   # smoke run, never published
-python runner/run.py                       # full run → results/<date>-<runner>/
+python runner/run.py --group core           # full run → results/<time>-<runner>-core/
+python runner/run.py --group python-variants
 python runner/build_site.py                # results → site/data.json
 ```
 

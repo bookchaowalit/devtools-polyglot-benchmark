@@ -1,6 +1,10 @@
 """Lane registry: how to run each language/framework implementation.
 
 Adding a lane = one entry here + a directory under impl/ + a passing contract.
+
+A variant lane has a `parent` and changes exactly one thing (`change`). It runs
+in the same job as its parent, so the two are measured on the same VM and the
+page can show the variant as a percentage of its parent.
 """
 
 from __future__ import annotations
@@ -10,11 +14,14 @@ import socket
 import subprocess
 import time
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PY = str(ROOT / "impl/python/.venv/bin/python")
+PY313 = str(ROOT / "impl/python/.venv313/bin/python")
+ALL = ("W1-json", "W2-hash", "W3-http-read", "W4-http-db", "W5-cold-start")
+HTTP = ("W3-http-read", "W4-http-db", "W5-cold-start")
 TS = ROOT / "impl/typescript/dist"
 GO = ROOT / "impl/go/bin"
 RS = ROOT / "impl/rust/target/release"
@@ -29,6 +36,21 @@ class Lane:
     w1: list[str]
     w2: list[str]
     server: list[str]
+    group: str = "core"
+    parent: str | None = None
+    change: str = ""
+    env: dict[str, str] = field(default_factory=dict)
+    workloads: tuple[str, ...] = ALL
+
+
+def _python_variant(id: str, change: str, workloads: tuple[str, ...], env: dict[str, str] | None = None,
+                    python: str = PY) -> Lane:
+    return Lane(
+        id=id, language="python", framework="fastapi+uvicorn", version_cmd=[python, "--version"],
+        w1=[python, str(ROOT / "impl/python/w1_json.py")], w2=[python, str(ROOT / "impl/python/w2_hash.py")],
+        server=[python, str(ROOT / "impl/python/server.py")],
+        group="python-variants", parent="python-fastapi", change=change, env=env or {}, workloads=workloads,
+    )
 
 
 LANES: dict[str, Lane] = {
@@ -70,8 +92,26 @@ LANES: dict[str, Lane] = {
             w2=[str(RS / "w2-hash")],
             server=[str(RS / "server")],
         ),
+        _python_variant("python-fastapi+uvloop", "uvloop event loop + httptools parser (uvicorn[standard])",
+                        HTTP, {"BENCH_LOOP": "uvloop"}),
+        _python_variant("python-fastapi+orjson", "orjson for JSON (ORJSONResponse; orjson in W1)",
+                        ("W1-json", "W3-http-read", "W4-http-db"), {"BENCH_JSON": "orjson"}),
+        _python_variant("python-fastapi+asyncpg", "asyncpg pool instead of psycopg_pool", ("W4-http-db",),
+                        {"BENCH_DB": "asyncpg"}),
+        _python_variant("python-fastapi+2workers", "2 uvicorn workers, 5 DB connections each", HTTP,
+                        {"BENCH_WORKERS": "2"}),
+        _python_variant("python-fastapi+py313", "CPython 3.13 instead of 3.12", ALL, python=PY313),
     ]
 }
+
+GROUPS = sorted({lane.group for lane in LANES.values()})
+
+
+def lanes_in(group: str) -> list[str]:
+    """The group's lanes, plus the parents of its variants, parents first."""
+    ids = [lane.id for lane in LANES.values() if lane.group == group]
+    parents = [LANES[i].parent for i in ids if LANES[i].parent and LANES[i].parent not in ids]
+    return list(dict.fromkeys(parents + ids))
 
 
 def runtime_version(lane: Lane) -> str:
@@ -105,6 +145,17 @@ def _has(cmd: str) -> bool:
     return any((Path(p) / cmd).exists() for p in os.environ.get("PATH", "").split(os.pathsep))
 
 
+def _descendants(pid: int) -> list[int]:
+    found = []
+    try:
+        children = Path(f"/proc/{pid}/task/{pid}/children").read_text().split()
+    except OSError:
+        return found
+    for child in map(int, children):
+        found += [child, *_descendants(child)]
+    return found
+
+
 class Server:
     """Start a lane's HTTP server and wait until /health answers 200."""
 
@@ -112,7 +163,7 @@ class Server:
         self.lane = lane
         self.port = free_port()
         self.url = f"http://127.0.0.1:{self.port}"
-        env = {**os.environ, "PORT": str(self.port), "RECORDS_PATH": str(records)}
+        env = {**os.environ, **lane.env, "PORT": str(self.port), "RECORDS_PATH": str(records)}
         self.started = time.perf_counter()
         self.proc = subprocess.Popen(
             server_cpus() + lane.server, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
@@ -133,11 +184,16 @@ class Server:
         raise TimeoutError(f"{self.lane.id} server not ready in {timeout_s}s")
 
     def peak_rss_mib(self) -> float:
-        status = Path(f"/proc/{self.proc.pid}/status").read_text()
-        for line in status.splitlines():
-            if line.startswith("VmHWM:"):
-                return int(line.split()[1]) / 1024
-        return 0.0
+        """Sum of peak RSS over the server and its descendants (uvicorn workers, taskset child)."""
+        total = 0
+        for pid in [self.proc.pid, *_descendants(self.proc.pid)]:
+            try:
+                for line in Path(f"/proc/{pid}/status").read_text().splitlines():
+                    if line.startswith("VmHWM:"):
+                        total += int(line.split()[1])
+            except OSError:
+                pass
+        return total / 1024
 
     def __enter__(self) -> "Server":
         return self

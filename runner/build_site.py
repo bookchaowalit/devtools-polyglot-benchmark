@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def main() -> int:
     runs = []
-    for run_file in sorted((ROOT / "results").glob("*/run.json")):
+    for run_file in sorted((ROOT / "results").glob("*/run.json"), key=lambda f: json.loads(f.read_text())["started_at"]):
         run = json.loads(run_file.read_text())
         if run["settings"].get("quick"):
             continue

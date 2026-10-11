@@ -8,13 +8,13 @@
 <style>
 :root {
   --bg: #f7f7f5; --surface: #ffffff; --text: #1b1b1f; --muted: #5f6368; --line: #e3e3df;
-  --accent: #2f5bd3; --bar: #2f5bd3; --bar-2: #c2410c; --whisker: #1b1b1f; --warn-bg: #fff7e6; --warn: #8a5300;
+  --accent: #2f5bd3; --bar: #2f5bd3; --bar-2: #c2410c; --whisker: #1b1b1f; --warn-bg: #fff7e6; --warn: #8a5300; --good: #15803d; --bad: #b91c1c;
   --radius: 10px; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #111214; --surface: #1a1b1e; --text: #ececec; --muted: #a0a3a8; --line: #2c2e33;
-    --accent: #7ea2ff; --bar: #7ea2ff; --bar-2: #fb923c; --whisker: #ececec; --warn-bg: #2a2214; --warn: #f5c26b;
+    --accent: #7ea2ff; --bar: #7ea2ff; --bar-2: #fb923c; --whisker: #ececec; --warn-bg: #2a2214; --warn: #f5c26b; --good: #4ade80; --bad: #f87171;
   }
 }
 * { box-sizing: border-box; }
@@ -41,13 +41,20 @@ ul.limits { padding-left: 20px; color: var(--muted); }
 footer { margin-top: 32px; color: var(--muted); font-size: 0.85rem; }
 a { color: var(--accent); }
 .empty { color: var(--muted); }
+table.delta { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+table.delta th, table.delta td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+table.delta th:first-child, table.delta td:first-child { text-align: left; white-space: normal; }
+table.delta td.lane { font-family: var(--mono); font-size: 0.8rem; }
+table.delta .change { display: block; color: var(--muted); font-family: inherit; font-size: 0.78rem; }
+.better { color: var(--good); font-weight: 600; } .worse { color: var(--bad); font-weight: 600; } .flat { color: var(--muted); }
+.scroll { overflow-x: auto; }
 @media (max-width: 560px) { .row { grid-template-columns: 1fr 90px; } .row svg.bar { grid-column: 1 / -1; grid-row: 2; } }
 </style>
 </head>
 <body>
 <main>
   <h1>Polyglot Benchmark Lab</h1>
-  <p class="lead">Each language implements the same workloads. A lane has to pass the same contract tests before it is measured. Bars show the median of repeated runs, and the line on each bar spans min to max. Every number comes from a recorded run.</p>
+  <p class="lead">Each language implements the same workloads. A lane has to pass the same contract tests before it is measured. Bars show the median of repeated runs, and the line on each bar spans min to max. Every number comes from a recorded run. A <em>variant</em> lane changes one thing against its parent and runs on the same machine, so it is shown as a percentage of the parent.</p>
 
   <div class="controls">
     <label for="run">Run</label>
@@ -111,6 +118,55 @@ function bar(value, lo, hi, max, alt) {
   return svg;
 }
 
+const DELTAS = [
+  { wl: "W1-json", key: "wall_ms", label: "W1 wall", higher: false },
+  { wl: "W3-http-read", key: "rps", label: "W3 RPS", higher: true },
+  { wl: "W3-http-read", key: "p95_ms", label: "W3 p95", higher: false },
+  { wl: "W4-http-db", key: "rps", label: "W4 RPS", higher: true },
+  { wl: "W4-http-db", key: "p95_ms", label: "W4 p95", higher: false },
+  { wl: "W4-http-db", key: "peak_rss_mib", label: "W4 RSS", higher: false, single: true },
+  { wl: "W5-cold-start", key: "ready_ms", label: "Cold start", higher: false },
+];
+
+function metricOf(run, lane, d) {
+  const r = run.results.find(x => x.lane === lane && x.workload === d.wl && x.metrics);
+  if (!r) return undefined;
+  const v = r.metrics[d.key];
+  return d.single ? v : v.median;
+}
+
+function renderVariants(run) {
+  const byLane = new Map(run.results.filter(r => r.parent).map(r => [r.lane, r]));
+  const variants = (run.lanes || [...byLane.keys()]).filter(l => byLane.has(l)).map(l => byLane.get(l));
+  if (!variants.length) return null;
+  const card = el("section", { className: "card" });
+  card.append(el("h2", {}, "Variants vs parent"),
+    el("p", { className: "what" }, "Each variant changes one thing. Green means better than the parent in this run, red worse; differences under 3% are within run-to-run noise and shown grey."));
+  const table = el("table", { className: "delta" });
+  const head = el("tr");
+  head.append(el("th", {}, "Variant"), ...DELTAS.map(d => el("th", {}, d.label)));
+  table.append(head);
+  for (const v of variants) {
+    const tr = el("tr");
+    const name = el("td", { className: "lane" }, v.lane);
+    name.append(el("span", { className: "change" }, v.change));
+    tr.append(name);
+    for (const d of DELTAS) {
+      const a = metricOf(run, v.parent, d), b = metricOf(run, v.lane, d);
+      if (a === undefined || b === undefined) { tr.append(el("td", { className: "flat" }, "—")); continue; }
+      const pct = (b / a - 1) * 100;
+      const good = d.higher ? pct > 0 : pct < 0;
+      const cls = Math.abs(pct) < 3 ? "flat" : good ? "better" : "worse";
+      tr.append(el("td", { className: cls, title: `${a.toFixed(2)} → ${b.toFixed(2)}` }, `${pct > 0 ? "+" : ""}${pct.toFixed(0)}%`));
+    }
+    table.append(tr);
+  }
+  const wrap = el("div", { className: "scroll" });
+  wrap.append(table);
+  card.append(wrap);
+  return card;
+}
+
 function render(run) {
   const cards = document.getElementById("cards");
   cards.replaceChildren();
@@ -118,7 +174,9 @@ function render(run) {
   note.replaceChildren();
   const r = run.runner;
   note.appendChild(el("p", { className: "note" },
-    `${r.kind} runner · ${r.cpu_model || r.machine} · ${r.vcpu} vCPU · commit ${run.commit.slice(0, 7)} · ${run.settings.repeats} repeats · load generator ${run.load_generator}`));
+    `${run.group || "core"} · ${r.kind} runner · ${r.cpu_model || r.machine} · ${r.vcpu} vCPU · commit ${run.commit.slice(0, 7)} · ${run.settings.repeats} repeats · load generator ${run.load_generator}`));
+  const variants = renderVariants(run);
+  if (variants) cards.append(variants);
 
   for (const w of WORKLOADS) {
     const rows = run.results.filter(x => x.workload === w.id);
@@ -150,7 +208,7 @@ fetch("data.json").then(r => r.json()).then(data => {
   const select = document.getElementById("run");
   const runs = data.runs.slice().reverse();
   if (!runs.length) { document.getElementById("cards").append(el("p", { className: "empty" }, "No published runs yet.")); return; }
-  runs.forEach((run, i) => select.append(el("option", { value: i }, `${run.id} (${run.runner.kind})`)));
+  runs.forEach((run, i) => select.append(el("option", { value: i }, `${run.started_at.slice(0, 16).replace("T", " ")} UTC · ${run.group || "core"} (${run.runner.kind})`)));
   select.addEventListener("change", () => render(runs[select.value]));
   render(runs[0]);
 });

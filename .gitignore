@@ -8,3 +8,4 @@ __pycache__/
 .env*
 impl/go/bin/
 impl/rust/target/
+impl/python/.venv313/

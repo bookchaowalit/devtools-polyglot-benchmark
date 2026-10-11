@@ -34,7 +34,8 @@ def check_lane(lane: Lane) -> list[str]:
     records_path = ensure_records()
     records = json.loads(records_path.read_text())
 
-    out = subprocess.run(lane.w1 + [str(records_path)], capture_output=True, text=True)
+    env = {**os.environ, **lane.env}
+    out = subprocess.run(lane.w1 + [str(records_path)], capture_output=True, text=True, env=env)
     if out.returncode != 0:
         failures.append(f"W1 exit {out.returncode}: {out.stderr[-300:]}")
     elif json.loads(out.stdout) != expected_w1(records):
@@ -43,7 +44,7 @@ def check_lane(lane: Lane) -> list[str]:
     blob = ensure_blob()
     with blob.open("rb") as fh:
         want = hashlib.file_digest(fh, "sha256").hexdigest()
-    out = subprocess.run(lane.w2 + [str(blob)], capture_output=True, text=True)
+    out = subprocess.run(lane.w2 + [str(blob)], capture_output=True, text=True, env=env)
     if out.returncode != 0:
         failures.append(f"W2 exit {out.returncode}: {out.stderr[-300:]}")
     elif out.stdout.strip() != want:

@@ -42,6 +42,7 @@ jobs:
         run: |
           command -v /usr/bin/time || sudo apt-get install -y time
           uv sync --project impl/python --frozen
+          UV_PROJECT_ENVIRONMENT=$PWD/impl/python/.venv313 uv sync --project impl/python --python 3.13 --frozen
           npm ci --prefix impl/typescript
           npm run build --prefix impl/typescript
           (cd impl/go && go build -o bin/ ./cmd/...)
@@ -51,4 +52,6 @@ jobs:
       - name: Contract tests
         run: python -m unittest discover -s tests -v
       - name: Smoke run (not published)
-        run: python runner/run.py --quick --out .cache/quick
+        run: |
+          python runner/run.py --quick --group core --out .cache/quick-core
+          python runner/run.py --quick --group python-variants --out .cache/quick-python-variants
