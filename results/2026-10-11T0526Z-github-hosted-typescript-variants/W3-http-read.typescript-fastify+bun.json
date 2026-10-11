@@ -1,0 +1,83 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W3-http-read",
+  "lane": "typescript-fastify+bun",
+  "commit": "3e62b63147106c95522057f00bc4625cbf1a1d40",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor"
+  },
+  "group": "typescript-variants",
+  "parent": "typescript-fastify",
+  "change": "Bun runtime instead of Node (same compiled JS)",
+  "runtime": {
+    "language": "typescript",
+    "version": "1.4.3",
+    "framework": "fastify"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "rps": {
+      "median": 39801.37620796029,
+      "min": 39264.87450834412,
+      "max": 40450.21367997275,
+      "runs": [
+        40450.21367997275,
+        39588.55146340378,
+        39801.37620796029,
+        40150.459046398806,
+        39264.87450834412
+      ]
+    },
+    "p50_ms": {
+      "median": 1.183959,
+      "min": 1.158571,
+      "max": 1.1940970000000002,
+      "runs": [
+        1.158571,
+        1.185723,
+        1.183959,
+        1.169362,
+        1.1940970000000002
+      ]
+    },
+    "p95_ms": {
+      "median": 1.891787,
+      "min": 1.8819679999999999,
+      "max": 1.9166,
+      "runs": [
+        1.891787,
+        1.9110729999999998,
+        1.891065,
+        1.8819679999999999,
+        1.9166
+      ]
+    },
+    "p99_ms": {
+      "median": 2.53036,
+      "min": 2.452839,
+      "max": 2.567688,
+      "runs": [
+        2.452839,
+        2.532668,
+        2.462577,
+        2.53036,
+        2.567688
+      ]
+    },
+    "error_rate": 0.0,
+    "peak_rss_mib": 90.76171875
+  }
+}
