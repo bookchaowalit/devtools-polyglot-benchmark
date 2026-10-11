@@ -19,7 +19,7 @@ Results page: <https://polyglot-benchmark-lab.vercel.app> (`site/`). Raw data: `
 
 A variant changes exactly one thing against its parent and runs in the same
 job, so both are measured on the same VM. The page shows it as a percentage
-of the parent. Groups (`core`, `python-variants`) run as parallel jobs.
+of the parent. Groups (`core`, `python-variants`, `typescript-variants`) run as parallel jobs.
 
 | Variant | Parent | The one change |
 |---|---|---|
@@ -29,6 +29,10 @@ of the parent. Groups (`core`, `python-variants`) run as parallel jobs.
 | `python-fastapi+2workers` | `python-fastapi` | 2 uvicorn workers (h11), 5 DB connections each |
 | `python-fastapi+uvloop+2workers` | `python-fastapi+uvloop` | 2 uvicorn workers |
 | `python-fastapi+py313` | `python-fastapi` | CPython 3.13 |
+| `typescript-fastify+bun` | `typescript-fastify` | Bun runtime (same compiled JS) |
+| `typescript-hono` | `typescript-fastify` | Hono on `@hono/node-server` |
+| `typescript-fastify+postgresjs` | `typescript-fastify` | postgres.js instead of `pg` |
+| `typescript-fastify+cluster` | `typescript-fastify` | `node:cluster`, 2 processes, 5 DB connections each |
 
 Finding behind the two worker variants: with the default h11 protocol,
 uvicorn's multi-worker mode does not set `TCP_NODELAY` on accepted
@@ -47,7 +51,7 @@ See [workloads/README.md](workloads/README.md): `W1-json`, `W2-hash`,
 
 ## Run it
 
-Needs Python 3.12, Node 22, Go, Rust, `uv`, and GNU time (`/usr/bin/time`).
+Needs Python 3.12 and 3.13, Node 22, Bun, Go, Rust, `uv`, and GNU time (`/usr/bin/time`).
 W4 needs `DATABASE_URL` pointing at a PostgreSQL you can drop a table in
 (the runner seeds `bench_items`); without it, W4 is skipped. The runner
 downloads `oha` 1.16.0 into `.tools/` if it is not on `PATH`.

@@ -109,6 +109,29 @@ LANES: dict[str, Lane] = {
     ]
 }
 
+def _ts_variant(id: str, change: str, workloads: tuple[str, ...], env: dict[str, str] | None = None,
+                runtime: str = "node", server: str = "server.js", framework: str = "fastify") -> Lane:
+    return Lane(
+        id=id, language="typescript", framework=framework, version_cmd=[runtime, "--version"],
+        w1=[runtime, str(TS / "w1-json.js")], w2=[runtime, str(TS / "w2-hash.js")],
+        server=[runtime, str(TS / server)],
+        group="typescript-variants", parent="typescript-fastify", change=change, env=env or {}, workloads=workloads,
+    )
+
+
+LANES.update({
+    lane.id: lane
+    for lane in [
+        _ts_variant("typescript-fastify+bun", "Bun runtime instead of Node (same compiled JS)", ALL, runtime="bun"),
+        _ts_variant("typescript-hono", "Hono (@hono/node-server) instead of Fastify", HTTP,
+                    server="server-hono.js", framework="hono"),
+        _ts_variant("typescript-fastify+postgresjs", "postgres.js instead of node-postgres (pg)", ("W4-http-db",),
+                    {"BENCH_DB": "postgresjs"}),
+        _ts_variant("typescript-fastify+cluster", "node:cluster with 2 processes, 5 DB connections each", HTTP,
+                    {"BENCH_WORKERS": "2"}),
+    ]
+})
+
 GROUPS = sorted({lane.group for lane in LANES.values()})
 
 

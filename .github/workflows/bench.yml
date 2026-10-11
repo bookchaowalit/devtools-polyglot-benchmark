@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        group: [core, python-variants]
+        group: [core, python-variants, typescript-variants]
     runs-on: ubuntu-24.04
     services:
       postgres:
@@ -45,6 +45,9 @@ jobs:
         with:
           go-version-file: impl/go/go.mod
           cache-dependency-path: impl/go/go.sum
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: "1.4.3"
       - name: Rust toolchain
         run: rustup toolchain install stable --profile minimal && rustup default stable
       - name: Install lanes
