@@ -1,0 +1,58 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W2-hash",
+  "lane": "rust-axum",
+  "commit": "65c54d5f05b90626ed72187a2386dddf41149ce0",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "AMD EPYC 9V45 96-Core Processor"
+  },
+  "group": "core",
+  "parent": null,
+  "change": "",
+  "runtime": {
+    "language": "rust",
+    "version": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "framework": "axum+tokio"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "wall_ms": {
+      "median": 53.03210199986097,
+      "min": 52.99192199981917,
+      "max": 53.70867600004203,
+      "runs": [
+        53.70867600004203,
+        53.492588999915824,
+        53.00690400008534,
+        53.03210199986097,
+        52.99192199981917
+      ]
+    },
+    "throughput_mib_s": {
+      "median": 1885.650317995356,
+      "min": 1861.8965770059522,
+      "max": 1887.080072323877,
+      "runs": [
+        1861.8965770059522,
+        1869.417836555964,
+        1886.5467034226144,
+        1885.650317995356,
+        1887.080072323877
+      ]
+    },
+    "peak_rss_mib": 3.0546875
+  }
+}
