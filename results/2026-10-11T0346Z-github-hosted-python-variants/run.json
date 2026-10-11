@@ -1,0 +1,39 @@
+{
+  "schema": "polyglot-benchmark-lab.run.v1",
+  "started_at": "2026-10-11T03:46:40.888361+00:00",
+  "commit": "9014bd8d9310ac56cc55d6d2dde7bb488e81b8f3",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "AMD EPYC 9V74 80-Core Processor"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "load_generator": "oha 1.16.0",
+  "group": "python-variants",
+  "lanes": [
+    "python-fastapi",
+    "python-fastapi+uvloop",
+    "python-fastapi+orjson",
+    "python-fastapi+asyncpg",
+    "python-fastapi+2workers",
+    "python-fastapi+py313"
+  ],
+  "workloads": [
+    "W1-json",
+    "W2-hash",
+    "W3-http-read",
+    "W4-http-db",
+    "W5-cold-start"
+  ],
+  "database": "postgres service container"
+}
