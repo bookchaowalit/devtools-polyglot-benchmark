@@ -52,8 +52,9 @@ See [workloads/README.md](workloads/README.md): `W1-json`, `W2-hash`,
 ## Run it
 
 Needs Python 3.12 and 3.13, Node 22, Bun, Go, Rust, `uv`, and GNU time (`/usr/bin/time`).
-W4 needs `DATABASE_URL` pointing at a PostgreSQL you can drop a table in
-(the runner seeds `bench_items`); without it, W4 is skipped. The runner
+W4 needs `DATABASE_URL` pointing at a dedicated database named `bench`
+(the runner drops and reseeds `bench_items`, and refuses any other database
+name); without it, W4 is skipped. The runner
 downloads `oha` 1.16.0 into `.tools/` if it is not on `PATH`.
 
 ```bash
