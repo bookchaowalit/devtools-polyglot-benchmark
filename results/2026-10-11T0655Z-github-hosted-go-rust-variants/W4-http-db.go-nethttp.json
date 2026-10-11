@@ -1,0 +1,83 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W4-http-db",
+  "lane": "go-nethttp",
+  "commit": "37246781bef09f4beda5417633cff0087278f953",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor"
+  },
+  "group": "go-rust-variants",
+  "parent": null,
+  "change": "",
+  "runtime": {
+    "language": "go",
+    "version": "go version go1.27.2 linux/amd64",
+    "framework": "net/http"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "rps": {
+      "median": 6325.110439236397,
+      "min": 6320.40765172536,
+      "max": 6338.115849723847,
+      "runs": [
+        6320.7900276741875,
+        6320.40765172536,
+        6338.115849723847,
+        6325.110439236397,
+        6335.682091207583
+      ]
+    },
+    "p50_ms": {
+      "median": 7.299529,
+      "min": 7.290424,
+      "max": 7.310708,
+      "runs": [
+        7.299529,
+        7.310708,
+        7.290424,
+        7.303775,
+        7.291622
+      ]
+    },
+    "p95_ms": {
+      "median": 11.666837,
+      "min": 11.630389,
+      "max": 11.702098,
+      "runs": [
+        11.702098,
+        11.645021,
+        11.666837,
+        11.676245999999999,
+        11.630389
+      ]
+    },
+    "p99_ms": {
+      "median": 13.380866,
+      "min": 13.313778,
+      "max": 13.546074,
+      "runs": [
+        13.546074,
+        13.380866,
+        13.338921000000001,
+        13.384391,
+        13.313778
+      ]
+    },
+    "error_rate": 0.0,
+    "peak_rss_mib": 35.46875
+  }
+}
