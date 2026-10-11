@@ -72,6 +72,7 @@ table.delta .change { display: block; color: var(--muted); font-family: inherit;
       <li>Lanes use their runtime's default concurrency on the cores they are given (2). Go and Rust spread across both cores; one Node process and one uvicorn worker use one. That is the out-of-the-box behavior, not an equal-threads comparison.</li>
       <li>In W4, PostgreSQL runs on the same VM and is not pinned, so the database competes for CPU with the server and the load generator. W4 shows how each driver and pool behaves under a shared bottleneck, not each language's ceiling.</li>
       <li>W2 depends on whether a lane's SHA-256 uses the CPU's SHA extensions (OpenSSL in Python and Node; Go and Rust have their own implementations). Results can flip between CPUs.</li>
+      <li>The h11 multi-worker variant is slow for a protocol reason, not a CPU one: uvicorn's worker mode leaves TCP_NODELAY off and h11 writes headers and body separately, so Nagle's algorithm and delayed ACK add about 40 ms per request. The uvloop + httptools worker variant shows what workers gain without that.</li>
       <li>Higher throughput on these workloads does not make a language the better choice for a product. Developer time, ecosystem, and hosting cost decide that.</li>
     </ul>
   </section>

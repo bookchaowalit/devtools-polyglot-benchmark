@@ -26,8 +26,16 @@ of the parent. Groups (`core`, `python-variants`) run as parallel jobs.
 | `python-fastapi+uvloop` | `python-fastapi` | uvloop + httptools (`uvicorn[standard]`) |
 | `python-fastapi+orjson` | `python-fastapi` | `ORJSONResponse`; orjson in W1 |
 | `python-fastapi+asyncpg` | `python-fastapi` | asyncpg pool instead of psycopg_pool |
-| `python-fastapi+2workers` | `python-fastapi` | 2 uvicorn workers, 5 DB connections each |
+| `python-fastapi+2workers` | `python-fastapi` | 2 uvicorn workers (h11), 5 DB connections each |
+| `python-fastapi+uvloop+2workers` | `python-fastapi+uvloop` | 2 uvicorn workers |
 | `python-fastapi+py313` | `python-fastapi` | CPython 3.13 |
+
+Finding behind the two worker variants: with the default h11 protocol,
+uvicorn's multi-worker mode does not set `TCP_NODELAY` on accepted
+connections (strace shows no `setsockopt(TCP_NODELAY)`, while one worker sets
+it), and h11 writes headers and body separately. Nagle's algorithm plus the
+client's delayed ACK then add about 40 ms to every request, which caps
+throughput at roughly connections ÷ 0.04 s. httptools does not hit this.
 
 All lanes use a pool of 10 PostgreSQL connections for W4. Adding a lane means one entry in
 `runner/lanes.py`, a directory under `impl/`, and a passing contract.

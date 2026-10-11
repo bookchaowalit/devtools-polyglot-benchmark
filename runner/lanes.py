@@ -44,12 +44,12 @@ class Lane:
 
 
 def _python_variant(id: str, change: str, workloads: tuple[str, ...], env: dict[str, str] | None = None,
-                    python: str = PY) -> Lane:
+                    python: str = PY, parent: str = "python-fastapi") -> Lane:
     return Lane(
         id=id, language="python", framework="fastapi+uvicorn", version_cmd=[python, "--version"],
         w1=[python, str(ROOT / "impl/python/w1_json.py")], w2=[python, str(ROOT / "impl/python/w2_hash.py")],
         server=[python, str(ROOT / "impl/python/server.py")],
-        group="python-variants", parent="python-fastapi", change=change, env=env or {}, workloads=workloads,
+        group="python-variants", parent=parent, change=change, env=env or {}, workloads=workloads,
     )
 
 
@@ -98,8 +98,13 @@ LANES: dict[str, Lane] = {
                         ("W1-json", "W3-http-read", "W4-http-db"), {"BENCH_JSON": "orjson"}),
         _python_variant("python-fastapi+asyncpg", "asyncpg pool instead of psycopg_pool", ("W4-http-db",),
                         {"BENCH_DB": "asyncpg"}),
-        _python_variant("python-fastapi+2workers", "2 uvicorn workers, 5 DB connections each", HTTP,
+        # With the default h11 protocol, uvicorn's multi-worker mode never sets TCP_NODELAY on
+        # connections, and h11 sends headers and body in two writes: Nagle + delayed ACK then add
+        # ~40 ms to every request. Kept as measured, because that is what `--workers 2` does.
+        _python_variant("python-fastapi+2workers", "2 uvicorn workers (h11), 5 DB connections each", HTTP,
                         {"BENCH_WORKERS": "2"}),
+        _python_variant("python-fastapi+uvloop+2workers", "2 uvicorn workers on uvloop + httptools", HTTP,
+                        {"BENCH_LOOP": "uvloop", "BENCH_WORKERS": "2"}, parent="python-fastapi+uvloop"),
         _python_variant("python-fastapi+py313", "CPython 3.13 instead of 3.12", ALL, python=PY313),
     ]
 }
