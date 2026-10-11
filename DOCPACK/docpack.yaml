@@ -1,0 +1,8 @@
+system_id: bookchaowalit/public/book-apps/tools/polyglot-benchmark-lab
+prefix: CARD
+brand: "POLYGLOT BENCHMARK LAB"
+subtitle: "ห้องทดลอง benchmark เว็บเฟรมเวิร์กหลายภาษาด้วย workload และ contract test เดียวกัน"
+footer: "polyglot-benchmark-lab — Product Card"
+color: "#0b3d91"
+audience: internal
+tier: L0
