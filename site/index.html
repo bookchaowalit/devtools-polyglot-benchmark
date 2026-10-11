@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polyglot Benchmark Lab</title>
+<meta name="description" content="The same workloads, implemented per language and framework, contract-checked, then measured. Every number links to its run record.">
+<style>
+:root {
+  --bg: #f7f7f5; --surface: #ffffff; --text: #1b1b1f; --muted: #5f6368; --line: #e3e3df;
+  --accent: #2f5bd3; --bar: #2f5bd3; --bar-2: #c2410c; --whisker: #1b1b1f; --warn-bg: #fff7e6; --warn: #8a5300;
+  --radius: 10px; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111214; --surface: #1a1b1e; --text: #ececec; --muted: #a0a3a8; --line: #2c2e33;
+    --accent: #7ea2ff; --bar: #7ea2ff; --bar-2: #fb923c; --whisker: #ececec; --warn-bg: #2a2214; --warn: #f5c26b;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 1.9rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+h2 { font-size: 1.15rem; margin: 0 0 4px; }
+p.lead { color: var(--muted); margin: 0 0 24px; max-width: 64ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
+select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+.grid { display: grid; gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 18px 14px; }
+.card .what { color: var(--muted); font-size: 0.9rem; margin: 0 0 12px; }
+.metric { margin: 10px 0 2px; font-size: 0.85rem; color: var(--muted); }
+.row { display: grid; grid-template-columns: 150px 1fr 110px; gap: 10px; align-items: center; margin: 4px 0; }
+.row .lane { font-family: var(--mono); font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .val { font-family: var(--mono); font-size: 0.85rem; text-align: right; }
+svg.bar { width: 100%; height: 18px; display: block; }
+.note { background: var(--warn-bg); color: var(--warn); border-radius: var(--radius); padding: 12px 14px; font-size: 0.9rem; margin: 0 0 20px; }
+details { margin-top: 10px; font-size: 0.85rem; }
+summary { cursor: pointer; color: var(--accent); }
+pre { font-family: var(--mono); font-size: 0.78rem; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow-x: auto; }
+ul.limits { padding-left: 20px; color: var(--muted); }
+footer { margin-top: 32px; color: var(--muted); font-size: 0.85rem; }
+a { color: var(--accent); }
+.empty { color: var(--muted); }
+@media (max-width: 560px) { .row { grid-template-columns: 1fr 90px; } .row svg.bar { grid-column: 1 / -1; grid-row: 2; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Polyglot Benchmark Lab</h1>
+  <p class="lead">Each language implements the same workloads. A lane has to pass the same contract tests before it is measured. Bars show the median of repeated runs, and the line on each bar spans min to max. Every number comes from a recorded run.</p>
+
+  <div class="controls">
+    <label for="run">Run</label>
+    <select id="run"></select>
+  </div>
+  <div id="run-note"></div>
+  <div class="grid" id="cards"></div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>What these results cannot tell you</h2>
+    <ul class="limits">
+      <li>GitHub-hosted runners are shared VMs. Runs on different days can differ by more than the gap between lanes, so compare within one run.</li>
+      <li>The load generator and the server share one machine, each pinned to half the cores. A production host with its own network behaves differently.</li>
+      <li>Each lane uses its language's default libraries and one process. Tuned setups (more workers, faster JSON libraries, uvloop) would be new lanes, not these numbers.</li>
+      <li>Higher throughput on these workloads does not make a language the better choice for a product. Developer time, ecosystem, and hosting cost decide that.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Source, contract tests and raw result JSON: <a href="https://github.com/bookchaowalit/polyglot-benchmark-lab">github.com/bookchaowalit/polyglot-benchmark-lab</a>
+  </footer>
+</main>
+<script>
+const WORKLOADS = [
+  { id: "W1-json", title: "W1 · JSON transform", what: "Parse 10,000 records, aggregate, sort, serialize. Each run is a fresh process.",
+    metrics: [{ key: "wall_ms", label: "Wall time (ms) — lower is better", fmt: v => v.toFixed(1) },
+              { key: "peak_rss_mib", label: "Peak RSS (MiB) — lower is better", fmt: v => v.toFixed(1), single: true, alt: true }] },
+  { id: "W2-hash", title: "W2 · SHA-256 of 100 MiB", what: "Stream a file in 1 MiB chunks and hash it.",
+    metrics: [{ key: "throughput_mib_s", label: "Throughput (MiB/s) — higher is better", fmt: v => v.toFixed(0) },
+              { key: "peak_rss_mib", label: "Peak RSS (MiB) — lower is better", fmt: v => v.toFixed(1), single: true, alt: true }] },
+  { id: "W3-http-read", title: "W3 · HTTP read", what: "GET /items/{id} from an in-memory store, 50 concurrent connections.",
+    metrics: [{ key: "rps", label: "Requests per second — higher is better", fmt: v => Math.round(v).toLocaleString("en-US") },
+              { key: "p95_ms", label: "p95 latency (ms) — lower is better", fmt: v => v.toFixed(2), alt: true },
+              { key: "peak_rss_mib", label: "Server peak RSS (MiB) — lower is better", fmt: v => v.toFixed(1), single: true, alt: true }] },
+  { id: "W5-cold-start", title: "W5 · Cold start", what: "Process start to first 200 on /health. This matters for services that sleep when idle.",
+    metrics: [{ key: "ready_ms", label: "Time to ready (ms) — lower is better", fmt: v => v.toFixed(0) }] },
+];
+
+const el = (tag, attrs = {}, text) => { const n = document.createElement(tag); Object.assign(n, attrs); if (text !== undefined) n.textContent = text; return n; };
+
+function bar(value, lo, hi, max, alt) {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("class", "bar"); svg.setAttribute("viewBox", "0 0 100 18"); svg.setAttribute("preserveAspectRatio", "none");
+  const pct = v => Math.max(0.5, (v / max) * 100);
+  const r = document.createElementNS(ns, "rect");
+  Object.entries({ x: 0, y: 3, height: 12, width: pct(value), rx: 1.5, fill: alt ? "var(--bar-2)" : "var(--bar)" }).forEach(([k, v]) => r.setAttribute(k, v));
+  svg.appendChild(r);
+  if (lo !== undefined && hi !== undefined && hi > lo) {
+    const l = document.createElementNS(ns, "line");
+    Object.entries({ x1: pct(lo), x2: pct(hi), y1: 9, y2: 9, stroke: "var(--whisker)", "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" }).forEach(([k, v]) => l.setAttribute(k, v));
+    svg.appendChild(l);
+  }
+  return svg;
+}
+
+function render(run) {
+  const cards = document.getElementById("cards");
+  cards.replaceChildren();
+  const note = document.getElementById("run-note");
+  note.replaceChildren();
+  const r = run.runner;
+  note.appendChild(el("p", { className: "note" },
+    `${r.kind} runner · ${r.cpu_model || r.machine} · ${r.vcpu} vCPU · commit ${run.commit.slice(0, 7)} · ${run.settings.repeats} repeats · load generator ${run.load_generator}`));
+
+  for (const w of WORKLOADS) {
+    const rows = run.results.filter(x => x.workload === w.id);
+    const card = el("section", { className: "card" });
+    card.append(el("h2", {}, w.title), el("p", { className: "what" }, w.what));
+    if (!rows.length) { card.append(el("p", { className: "empty" }, "Not measured in this run.")); cards.append(card); continue; }
+    for (const m of w.metrics) {
+      card.append(el("div", { className: "metric" }, m.label));
+      const vals = rows.filter(x => x.metrics).map(x => {
+        const v = x.metrics[m.key];
+        return m.single ? { lane: x.lane, v } : { lane: x.lane, v: v.median, lo: v.min, hi: v.max };
+      });
+      const max = Math.max(...vals.map(x => x.hi ?? x.v)) * 1.05;
+      for (const x of vals) {
+        const row = el("div", { className: "row" });
+        row.append(el("span", { className: "lane", title: x.lane }, x.lane), bar(x.v, x.lo, x.hi, max, m.alt), el("span", { className: "val" }, m.fmt(x.v)));
+        card.append(row);
+      }
+      for (const x of rows.filter(x => !x.metrics)) card.append(el("p", { className: "empty" }, `${x.lane}: failed the contract, so it was not measured.`));
+    }
+    const d = el("details");
+    d.append(el("summary", {}, "Run record"), el("pre", {}, JSON.stringify(rows.map(x => ({ lane: x.lane, runtime: x.runtime, contract_passed: x.contract_passed, metrics: x.metrics })), null, 2)));
+    card.append(d);
+    cards.append(card);
+  }
+}
+
+fetch("data.json").then(r => r.json()).then(data => {
+  const select = document.getElementById("run");
+  const runs = data.runs.slice().reverse();
+  if (!runs.length) { document.getElementById("cards").append(el("p", { className: "empty" }, "No published runs yet.")); return; }
+  runs.forEach((run, i) => select.append(el("option", { value: i }, `${run.id} (${run.runner.kind})`)));
+  select.addEventListener("change", () => render(runs[select.value]));
+  render(runs[0]);
+});
+</script>
+</body>
+</html>
