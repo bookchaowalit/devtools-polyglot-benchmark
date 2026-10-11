@@ -19,7 +19,7 @@ Results page: <https://polyglot-benchmark-lab.vercel.app> (`site/`). Raw data: `
 
 A variant changes exactly one thing against its parent and runs in the same
 job, so both are measured on the same VM. The page shows it as a percentage
-of the parent. Groups (`core`, `python-variants`, `typescript-variants`) run as parallel jobs.
+of the parent. Groups (`core`, `python-variants`, `typescript-variants`, `go-rust-variants`) run as parallel jobs. The Go and Rust framework variants share data access and validation (`impl/go/lab`, `impl/rust/src/lib.rs`); the baselines keep their own copies so their numbers stay comparable with earlier runs.
 
 | Variant | Parent | The one change |
 |---|---|---|
@@ -33,6 +33,9 @@ of the parent. Groups (`core`, `python-variants`, `typescript-variants`) run as 
 | `typescript-hono` | `typescript-fastify` | Hono on `@hono/node-server` |
 | `typescript-fastify+postgresjs` | `typescript-fastify` | postgres.js instead of `pg` |
 | `typescript-fastify+cluster` | `typescript-fastify` | `node:cluster`, 2 processes, 5 DB connections each |
+| `go-gin` | `go-nethttp` | Gin |
+| `go-fiber` | `go-nethttp` | Fiber v2 (fasthttp) |
+| `rust-actix` | `rust-axum` | actix-web |
 
 Finding behind the two worker variants: with the default h11 protocol,
 uvicorn's multi-worker mode does not set `TCP_NODELAY` on accepted

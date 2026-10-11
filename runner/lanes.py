@@ -132,6 +132,26 @@ LANES.update({
     ]
 })
 
+
+def _framework_variant(id: str, parent: str, language: str, framework: str, server: Path, change: str) -> Lane:
+    base = LANES[parent]
+    return Lane(
+        id=id, language=language, framework=framework, version_cmd=base.version_cmd, w1=base.w1, w2=base.w2,
+        server=[str(server)], group="go-rust-variants", parent=parent, change=change, workloads=HTTP,
+    )
+
+
+LANES.update({
+    lane.id: lane
+    for lane in [
+        _framework_variant("go-gin", "go-nethttp", "go", "gin", GO / "server-gin", "Gin instead of net/http"),
+        _framework_variant("go-fiber", "go-nethttp", "go", "fiber (fasthttp)", GO / "server-fiber",
+                           "Fiber v2 on fasthttp instead of net/http"),
+        _framework_variant("rust-actix", "rust-axum", "rust", "actix-web", RS / "server-actix",
+                           "actix-web instead of axum"),
+    ]
+})
+
 GROUPS = sorted({lane.group for lane in LANES.values()})
 
 

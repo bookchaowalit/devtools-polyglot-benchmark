@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        group: [core, python-variants, typescript-variants]
+        group: [core, python-variants, typescript-variants, go-rust-variants]
     runs-on: ubuntu-24.04
     services:
       postgres:

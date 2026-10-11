@@ -60,3 +60,4 @@ jobs:
           python runner/run.py --quick --group core --out .cache/quick-core
           python runner/run.py --quick --group python-variants --out .cache/quick-python-variants
           python runner/run.py --quick --group typescript-variants --out .cache/quick-typescript-variants
+          python runner/run.py --quick --group go-rust-variants --out .cache/quick-go-rust-variants
