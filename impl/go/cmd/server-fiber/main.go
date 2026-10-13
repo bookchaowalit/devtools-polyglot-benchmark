@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/bookchaowalit/polyglot-benchmark-lab/impl/go/lab"
+	"github.com/bookchaowalit/devtools-polyglot-benchmark/impl/go/lab"
 	"github.com/gofiber/fiber/v2"
 )
 
