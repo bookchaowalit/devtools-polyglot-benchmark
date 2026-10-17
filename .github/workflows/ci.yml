@@ -1,63 +1,38 @@
-name: ci
+# CI + security baseline (DevSecOps Phase 1). Public repository: GitHub-hosted runners.
+# The lanes' contract tests stay in contract.yml (they need PostgreSQL and all four toolchains);
+# bench.yml (benchmark + results publishing) is unchanged.
+name: CI
+
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  contract:
-    runs-on: ubuntu-24.04
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bench
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 2s
-          --health-timeout 5s
-          --health-retries 30
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bench
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
-        with:
-          python-version: "3.12"
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: "22"
-      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
-        with:
-          go-version-file: impl/go/go.mod
-          cache-dependency-path: impl/go/go.sum
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.4.3"
-      - name: Rust toolchain
-        run: rustup toolchain install stable --profile minimal && rustup default stable
-      - name: Install lanes
-        run: |
-          command -v /usr/bin/time || sudo apt-get install -y time
-          uv sync --project impl/python --frozen
-          UV_PROJECT_ENVIRONMENT=$PWD/impl/python/.venv313 uv sync --project impl/python --python 3.13 --frozen
-          npm ci --prefix impl/typescript
-          npm run build --prefix impl/typescript
-          (cd impl/go && go build -o bin/ ./cmd/...)
-          (cd impl/rust && cargo build --release --locked)
-      - name: Seed database
-        run: impl/python/.venv/bin/python runner/seed_db.py
-      - name: Contract tests
-        run: python -m unittest discover -s tests -v
-      - name: Smoke run (not published)
-        run: |
-          python runner/run.py --quick --group core --out .cache/quick-core
-          python runner/run.py --quick --group python-variants --out .cache/quick-python-variants
-          python runner/run.py --quick --group typescript-variants --out .cache/quick-typescript-variants
-          python runner/run.py --quick --group go-rust-variants --out .cache/quick-go-rust-variants
+  python:
+    uses: bookchaowalit/platform-ci-workflows/.github/workflows/ci-python.yml@c37ef9d113eefb3ed45429717cb7ca201192c3fc # v1.0.1
+    with:
+      python-version: "3.12" # as contract.yml / bench.yml
+      # Ruff over every Python file (runner, contract, tests, impl/python). The tests start the
+      # Python, TypeScript, Go and Rust servers against PostgreSQL, so they run in contract.yml.
+      install-command: ""
+      test-command: ""
+
+  typescript:
+    uses: bookchaowalit/platform-ci-workflows/.github/workflows/ci-node.yml@c37ef9d113eefb3ed45429717cb7ca201192c3fc # v1.0.1
+    with:
+      working-directory: impl/typescript
+      node-version: "22"
+      lint-command: "" # no Biome/ESLint config; tsc --noEmit still runs
+      build-command: npm run build
+
+  security:
+    uses: bookchaowalit/platform-ci-workflows/.github/workflows/security.yml@c37ef9d113eefb3ed45429717cb7ca201192c3fc # v1.0.1
