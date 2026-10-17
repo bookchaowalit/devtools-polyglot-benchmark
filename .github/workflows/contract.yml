@@ -1,0 +1,66 @@
+# Multi-language contract tests (PostgreSQL service + Python, TypeScript, Go and Rust lanes).
+# Formerly ci.yml; renamed when the shared CI baseline took that name. Steps unchanged; the
+# throwaway service database uses trust auth instead of a literal password.
+name: contract
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust # throwaway service container on the ephemeral runner VM
+          POSTGRES_DB: bench
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgresql://postgres@localhost:5432/bench
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "22"
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: impl/go/go.mod
+          cache-dependency-path: impl/go/go.sum
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: "1.4.3"
+      - name: Rust toolchain
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Install lanes
+        run: |
+          command -v /usr/bin/time || sudo apt-get install -y time
+          uv sync --project impl/python --frozen
+          UV_PROJECT_ENVIRONMENT=$PWD/impl/python/.venv313 uv sync --project impl/python --python 3.13 --frozen
+          npm ci --prefix impl/typescript
+          npm run build --prefix impl/typescript
+          (cd impl/go && go build -o bin/ ./cmd/...)
+          (cd impl/rust && cargo build --release --locked)
+      - name: Seed database
+        run: impl/python/.venv/bin/python runner/seed_db.py
+      - name: Contract tests
+        run: python -m unittest discover -s tests -v
+      - name: Smoke run (not published)
+        run: |
+          python runner/run.py --quick --group core --out .cache/quick-core
+          python runner/run.py --quick --group python-variants --out .cache/quick-python-variants
+          python runner/run.py --quick --group typescript-variants --out .cache/quick-typescript-variants
+          python runner/run.py --quick --group go-rust-variants --out .cache/quick-go-rust-variants

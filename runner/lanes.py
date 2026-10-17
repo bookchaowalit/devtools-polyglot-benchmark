@@ -16,6 +16,7 @@ import time
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Self
 
 ROOT = Path(__file__).resolve().parent.parent
 PY = str(ROOT / "impl/python/.venv/bin/python")
@@ -43,13 +44,27 @@ class Lane:
     workloads: tuple[str, ...] = ALL
 
 
-def _python_variant(id: str, change: str, workloads: tuple[str, ...], env: dict[str, str] | None = None,
-                    python: str = PY, parent: str = "python-fastapi") -> Lane:
+def _python_variant(
+    id: str,
+    change: str,
+    workloads: tuple[str, ...],
+    env: dict[str, str] | None = None,
+    python: str = PY,
+    parent: str = "python-fastapi",
+) -> Lane:
     return Lane(
-        id=id, language="python", framework="fastapi+uvicorn", version_cmd=[python, "--version"],
-        w1=[python, str(ROOT / "impl/python/w1_json.py")], w2=[python, str(ROOT / "impl/python/w2_hash.py")],
+        id=id,
+        language="python",
+        framework="fastapi+uvicorn",
+        version_cmd=[python, "--version"],
+        w1=[python, str(ROOT / "impl/python/w1_json.py")],
+        w2=[python, str(ROOT / "impl/python/w2_hash.py")],
         server=[python, str(ROOT / "impl/python/server.py")],
-        group="python-variants", parent=parent, change=change, env=env or {}, workloads=workloads,
+        group="python-variants",
+        parent=parent,
+        change=change,
+        env=env or {},
+        workloads=workloads,
     )
 
 
@@ -92,65 +107,156 @@ LANES: dict[str, Lane] = {
             w2=[str(RS / "w2-hash")],
             server=[str(RS / "server")],
         ),
-        _python_variant("python-fastapi+uvloop", "uvloop event loop + httptools parser (uvicorn[standard])",
-                        HTTP, {"BENCH_LOOP": "uvloop"}),
-        _python_variant("python-fastapi+orjson", "orjson for JSON (ORJSONResponse; orjson in W1)",
-                        ("W1-json", "W3-http-read", "W4-http-db"), {"BENCH_JSON": "orjson"}),
-        _python_variant("python-fastapi+asyncpg", "asyncpg pool instead of psycopg_pool", ("W4-http-db",),
-                        {"BENCH_DB": "asyncpg"}),
+        _python_variant(
+            "python-fastapi+uvloop",
+            "uvloop event loop + httptools parser (uvicorn[standard])",
+            HTTP,
+            {"BENCH_LOOP": "uvloop"},
+        ),
+        _python_variant(
+            "python-fastapi+orjson",
+            "orjson for JSON (ORJSONResponse; orjson in W1)",
+            ("W1-json", "W3-http-read", "W4-http-db"),
+            {"BENCH_JSON": "orjson"},
+        ),
+        _python_variant(
+            "python-fastapi+asyncpg",
+            "asyncpg pool instead of psycopg_pool",
+            ("W4-http-db",),
+            {"BENCH_DB": "asyncpg"},
+        ),
         # With the default h11 protocol, uvicorn's multi-worker mode never sets TCP_NODELAY on
         # connections, and h11 sends headers and body in two writes: Nagle + delayed ACK then add
         # ~40 ms to every request. Kept as measured, because that is what `--workers 2` does.
-        _python_variant("python-fastapi+2workers", "2 uvicorn workers (h11), 5 DB connections each", HTTP,
-                        {"BENCH_WORKERS": "2"}),
-        _python_variant("python-fastapi+uvloop+2workers", "2 uvicorn workers on uvloop + httptools", HTTP,
-                        {"BENCH_LOOP": "uvloop", "BENCH_WORKERS": "2"}, parent="python-fastapi+uvloop"),
-        _python_variant("python-fastapi+py313", "CPython 3.13 instead of 3.12", ALL, python=PY313),
+        _python_variant(
+            "python-fastapi+2workers",
+            "2 uvicorn workers (h11), 5 DB connections each",
+            HTTP,
+            {"BENCH_WORKERS": "2"},
+        ),
+        _python_variant(
+            "python-fastapi+uvloop+2workers",
+            "2 uvicorn workers on uvloop + httptools",
+            HTTP,
+            {"BENCH_LOOP": "uvloop", "BENCH_WORKERS": "2"},
+            parent="python-fastapi+uvloop",
+        ),
+        _python_variant(
+            "python-fastapi+py313", "CPython 3.13 instead of 3.12", ALL, python=PY313
+        ),
     ]
 }
 
-def _ts_variant(id: str, change: str, workloads: tuple[str, ...], env: dict[str, str] | None = None,
-                runtime: str = "node", server: str = "server.js", framework: str = "fastify") -> Lane:
+
+def _ts_variant(
+    id: str,
+    change: str,
+    workloads: tuple[str, ...],
+    env: dict[str, str] | None = None,
+    runtime: str = "node",
+    server: str = "server.js",
+    framework: str = "fastify",
+) -> Lane:
     return Lane(
-        id=id, language="typescript", framework=framework, version_cmd=[runtime, "--version"],
-        w1=[runtime, str(TS / "w1-json.js")], w2=[runtime, str(TS / "w2-hash.js")],
+        id=id,
+        language="typescript",
+        framework=framework,
+        version_cmd=[runtime, "--version"],
+        w1=[runtime, str(TS / "w1-json.js")],
+        w2=[runtime, str(TS / "w2-hash.js")],
         server=[runtime, str(TS / server)],
-        group="typescript-variants", parent="typescript-fastify", change=change, env=env or {}, workloads=workloads,
+        group="typescript-variants",
+        parent="typescript-fastify",
+        change=change,
+        env=env or {},
+        workloads=workloads,
     )
 
 
-LANES.update({
-    lane.id: lane
-    for lane in [
-        _ts_variant("typescript-fastify+bun", "Bun runtime instead of Node (same compiled JS)", ALL, runtime="bun"),
-        _ts_variant("typescript-hono", "Hono (@hono/node-server) instead of Fastify", HTTP,
-                    server="server-hono.js", framework="hono"),
-        _ts_variant("typescript-fastify+postgresjs", "postgres.js instead of node-postgres (pg)", ("W4-http-db",),
-                    {"BENCH_DB": "postgresjs"}),
-        _ts_variant("typescript-fastify+cluster", "node:cluster with 2 processes, 5 DB connections each", HTTP,
-                    {"BENCH_WORKERS": "2"}),
-    ]
-})
+LANES.update(
+    {
+        lane.id: lane
+        for lane in [
+            _ts_variant(
+                "typescript-fastify+bun",
+                "Bun runtime instead of Node (same compiled JS)",
+                ALL,
+                runtime="bun",
+            ),
+            _ts_variant(
+                "typescript-hono",
+                "Hono (@hono/node-server) instead of Fastify",
+                HTTP,
+                server="server-hono.js",
+                framework="hono",
+            ),
+            _ts_variant(
+                "typescript-fastify+postgresjs",
+                "postgres.js instead of node-postgres (pg)",
+                ("W4-http-db",),
+                {"BENCH_DB": "postgresjs"},
+            ),
+            _ts_variant(
+                "typescript-fastify+cluster",
+                "node:cluster with 2 processes, 5 DB connections each",
+                HTTP,
+                {"BENCH_WORKERS": "2"},
+            ),
+        ]
+    }
+)
 
 
-def _framework_variant(id: str, parent: str, language: str, framework: str, server: Path, change: str) -> Lane:
+def _framework_variant(
+    id: str, parent: str, language: str, framework: str, server: Path, change: str
+) -> Lane:
     base = LANES[parent]
     return Lane(
-        id=id, language=language, framework=framework, version_cmd=base.version_cmd, w1=base.w1, w2=base.w2,
-        server=[str(server)], group="go-rust-variants", parent=parent, change=change, workloads=HTTP,
+        id=id,
+        language=language,
+        framework=framework,
+        version_cmd=base.version_cmd,
+        w1=base.w1,
+        w2=base.w2,
+        server=[str(server)],
+        group="go-rust-variants",
+        parent=parent,
+        change=change,
+        workloads=HTTP,
     )
 
 
-LANES.update({
-    lane.id: lane
-    for lane in [
-        _framework_variant("go-gin", "go-nethttp", "go", "gin", GO / "server-gin", "Gin instead of net/http"),
-        _framework_variant("go-fiber", "go-nethttp", "go", "fiber (fasthttp)", GO / "server-fiber",
-                           "Fiber v2 on fasthttp instead of net/http"),
-        _framework_variant("rust-actix", "rust-axum", "rust", "actix-web", RS / "server-actix",
-                           "actix-web instead of axum"),
-    ]
-})
+LANES.update(
+    {
+        lane.id: lane
+        for lane in [
+            _framework_variant(
+                "go-gin",
+                "go-nethttp",
+                "go",
+                "gin",
+                GO / "server-gin",
+                "Gin instead of net/http",
+            ),
+            _framework_variant(
+                "go-fiber",
+                "go-nethttp",
+                "go",
+                "fiber (fasthttp)",
+                GO / "server-fiber",
+                "Fiber v2 on fasthttp instead of net/http",
+            ),
+            _framework_variant(
+                "rust-actix",
+                "rust-axum",
+                "rust",
+                "actix-web",
+                RS / "server-actix",
+                "actix-web instead of axum",
+            ),
+        ]
+    }
+)
 
 GROUPS = sorted({lane.group for lane in LANES.values()})
 
@@ -158,7 +264,9 @@ GROUPS = sorted({lane.group for lane in LANES.values()})
 def lanes_in(group: str) -> list[str]:
     """The group's lanes, plus the parents of its variants, parents first."""
     ids = [lane.id for lane in LANES.values() if lane.group == group]
-    parents = [LANES[i].parent for i in ids if LANES[i].parent and LANES[i].parent not in ids]
+    parents = [
+        LANES[i].parent for i in ids if LANES[i].parent and LANES[i].parent not in ids
+    ]
     return list(dict.fromkeys(parents + ids))
 
 
@@ -190,7 +298,9 @@ def load_cpus() -> list[str]:
 
 
 def _has(cmd: str) -> bool:
-    return any((Path(p) / cmd).exists() for p in os.environ.get("PATH", "").split(os.pathsep))
+    return any(
+        (Path(p) / cmd).exists() for p in os.environ.get("PATH", "").split(os.pathsep)
+    )
 
 
 def _descendants(pid: int) -> list[int]:
@@ -211,10 +321,18 @@ class Server:
         self.lane = lane
         self.port = free_port()
         self.url = f"http://127.0.0.1:{self.port}"
-        env = {**os.environ, **lane.env, "PORT": str(self.port), "RECORDS_PATH": str(records)}
+        env = {
+            **os.environ,
+            **lane.env,
+            "PORT": str(self.port),
+            "RECORDS_PATH": str(records),
+        }
         self.started = time.perf_counter()
         self.proc = subprocess.Popen(
-            server_cpus() + lane.server, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
+            server_cpus() + lane.server,
+            env=env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
         )
         self.ready_ms = self._wait(timeout_s)
 
@@ -222,7 +340,9 @@ class Server:
         deadline = self.started + timeout_s
         while time.perf_counter() < deadline:
             if self.proc.poll() is not None:
-                raise RuntimeError(f"{self.lane.id} server exited: {self.proc.stderr.read().decode()[-500:]}")
+                raise RuntimeError(
+                    f"{self.lane.id} server exited: {self.proc.stderr.read().decode()[-500:]}"
+                )
             try:
                 with urllib.request.urlopen(f"{self.url}/health", timeout=1) as resp:
                     if resp.status == 200:
@@ -243,7 +363,7 @@ class Server:
                 pass
         return total / 1024
 
-    def __enter__(self) -> "Server":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *exc: object) -> None:

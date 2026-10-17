@@ -6,9 +6,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from contract.check import check_lane  # noqa: E402
-from contract.fixtures import Lcg, build_records, expected_w1  # noqa: E402
-from runner.lanes import LANES, Lane  # noqa: E402
+from contract.check import check_lane
+from contract.fixtures import Lcg, build_records, expected_w1
+from runner.lanes import LANES, Lane
 
 PY = sys.executable
 WRONG = Lane(
@@ -25,7 +25,9 @@ WRONG = Lane(
 class FixtureTest(unittest.TestCase):
     def test_lcg_is_stable(self):
         rng = Lcg(1)
-        self.assertEqual([rng.next() for _ in range(3)], [1015568748, 1586005467, 2165703038])
+        self.assertEqual(
+            [rng.next() for _ in range(3)], [1015568748, 1586005467, 2165703038]
+        )
 
     def test_expected_w1_shape(self):
         out = expected_w1(build_records())
