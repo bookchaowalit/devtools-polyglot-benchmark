@@ -1,4 +1,4 @@
-module github.com/bookchaowalit/polyglot-benchmark-lab/impl/go
+module github.com/bookchaowalit/devtools-polyglot-benchmark/impl/go
 
 go 1.27.2
 
