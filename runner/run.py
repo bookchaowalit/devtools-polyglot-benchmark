@@ -29,7 +29,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from contract.check import check_lane  # noqa: E402
 from contract.fixtures import BLOB_BYTES, ensure_blob, ensure_records  # noqa: E402
-from runner.lanes import GROUPS, LANES, Lane, Server, lanes_in, load_cpus, runtime_version  # noqa: E402
+from runner.lanes import (
+    GROUPS,
+    LANES,
+    Lane,
+    Server,
+    lanes_in,
+    load_cpus,
+    runtime_version,
+)  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 OHA_VERSION = "1.16.0"
@@ -52,13 +60,18 @@ def oha_path() -> str:
 
 
 def git_commit() -> str:
-    out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True)
+    out = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True
+    )
     return out.stdout.strip() or "uncommitted"
 
 
 def runner_info() -> dict:
     return {
-        "kind": os.environ.get("BENCH_RUNNER", "github-hosted" if os.environ.get("GITHUB_ACTIONS") else "local"),
+        "kind": os.environ.get(
+            "BENCH_RUNNER",
+            "github-hosted" if os.environ.get("GITHUB_ACTIONS") else "local",
+        ),
         "os": platform.platform(),
         "machine": platform.machine(),
         "vcpu": os.cpu_count(),
@@ -87,7 +100,9 @@ def run_child(cmd: list[str], env: dict[str, str]) -> tuple[float, float]:
         start = time.perf_counter()
         proc = subprocess.run(
             [GNU_TIME, "-f", "%M", "-o", rss_file.name, *cmd],
-            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, env={**os.environ, **env},
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            env={**os.environ, **env},
         )
         wall = time.perf_counter() - start
         if proc.returncode != 0:
@@ -96,10 +111,17 @@ def run_child(cmd: list[str], env: dict[str, str]) -> tuple[float, float]:
 
 
 def spread(values: list[float]) -> dict:
-    return {"median": statistics.median(values), "min": min(values), "max": max(values), "runs": values}
+    return {
+        "median": statistics.median(values),
+        "min": min(values),
+        "max": max(values),
+        "runs": values,
+    }
 
 
-def measure_cli(cmd: list[str], env: dict[str, str], warmup: int, repeats: int) -> tuple[list[float], list[float]]:
+def measure_cli(
+    cmd: list[str], env: dict[str, str], warmup: int, repeats: int
+) -> tuple[list[float], list[float]]:
     for _ in range(warmup):
         run_child(cmd, env)
     walls, rss = [], []
@@ -111,12 +133,16 @@ def measure_cli(cmd: list[str], env: dict[str, str], warmup: int, repeats: int) 
 
 
 def w1(lane: Lane, s: dict) -> dict:
-    walls, rss = measure_cli(lane.w1 + [str(ensure_records())], lane.env, s["cli_warmup"], s["repeats"])
+    walls, rss = measure_cli(
+        lane.w1 + [str(ensure_records())], lane.env, s["cli_warmup"], s["repeats"]
+    )
     return {"wall_ms": spread([w * 1000 for w in walls]), "peak_rss_mib": max(rss)}
 
 
 def w2(lane: Lane, s: dict) -> dict:
-    walls, rss = measure_cli(lane.w2 + [str(ensure_blob())], lane.env, s["cli_warmup"], s["repeats"])
+    walls, rss = measure_cli(
+        lane.w2 + [str(ensure_blob())], lane.env, s["cli_warmup"], s["repeats"]
+    )
     mib = BLOB_BYTES / (1024 * 1024)
     return {
         "wall_ms": spread([w * 1000 for w in walls]),
@@ -127,8 +153,17 @@ def w2(lane: Lane, s: dict) -> dict:
 
 def oha(url: str, seconds: int, concurrency: int) -> dict:
     cmd = load_cpus() + [
-        oha_path(), "-z", f"{seconds}s", "-c", str(concurrency),
-        "--no-tui", "--output-format", "json", "-w", "--rand-regex-url", url,
+        oha_path(),
+        "-z",
+        f"{seconds}s",
+        "-c",
+        str(concurrency),
+        "--no-tui",
+        "--output-format",
+        "json",
+        "-w",
+        "--rand-regex-url",
+        url,
     ]
     out = subprocess.run(cmd, capture_output=True, text=True, check=True)
     return json.loads(out.stdout)
@@ -177,21 +212,45 @@ def w5(lane: Lane, s: dict) -> dict:
     return {"ready_ms": spread(ready)}
 
 
-MEASURES = {"W1-json": w1, "W2-hash": w2, "W3-http-read": w3, "W4-http-db": w4, "W5-cold-start": w5}
+MEASURES = {
+    "W1-json": w1,
+    "W2-hash": w2,
+    "W3-http-read": w3,
+    "W4-http-db": w4,
+    "W5-cold-start": w5,
+}
 
 
 def settings(quick: bool) -> dict:
     if quick:
-        return {"repeats": 1, "cli_warmup": 1, "http_seconds": 3, "http_warmup_s": 1,
-                "concurrency": 50, "cold_repeats": 3, "quick": True}
-    return {"repeats": 5, "cli_warmup": 2, "http_seconds": 30, "http_warmup_s": 10,
-            "concurrency": 50, "cold_repeats": 10, "quick": False}
+        return {
+            "repeats": 1,
+            "cli_warmup": 1,
+            "http_seconds": 3,
+            "http_warmup_s": 1,
+            "concurrency": 50,
+            "cold_repeats": 3,
+            "quick": True,
+        }
+    return {
+        "repeats": 5,
+        "cli_warmup": 2,
+        "http_seconds": 30,
+        "http_warmup_s": 10,
+        "concurrency": 50,
+        "cold_repeats": 10,
+        "quick": False,
+    }
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--group", choices=GROUPS, default="core",
-                    help="lane group; a variant group also runs its parents, in the same job")
+    ap.add_argument(
+        "--group",
+        choices=GROUPS,
+        default="core",
+        help="lane group; a variant group also runs its parents, in the same job",
+    )
     ap.add_argument("--lanes", nargs="*", help="override the group's lanes")
     ap.add_argument("--workloads", nargs="*", default=WORKLOADS)
     ap.add_argument("--quick", action="store_true")
@@ -202,53 +261,111 @@ def main() -> int:
     s = settings(args.quick)
     info = runner_info()
     stamp = dt.datetime.now(dt.timezone.utc)
-    out = args.out or ROOT / "results" / f"{stamp:%Y-%m-%dT%H%MZ}-{info['kind']}-{args.group}{'-quick' if args.quick else ''}"
+    out = (
+        args.out
+        or ROOT
+        / "results"
+        / f"{stamp:%Y-%m-%dT%H%MZ}-{info['kind']}-{args.group}{'-quick' if args.quick else ''}"
+    )
     out.mkdir(parents=True, exist_ok=True)
     commit = git_commit()
     workloads = list(args.workloads)
     if "W4-http-db" in workloads:
         if os.environ.get("DATABASE_URL"):
-            subprocess.run([str(ROOT / "impl/python/.venv/bin/python"), str(ROOT / "runner/seed_db.py")], check=True)
+            subprocess.run(
+                [
+                    str(ROOT / "impl/python/.venv/bin/python"),
+                    str(ROOT / "runner/seed_db.py"),
+                ],
+                check=True,
+            )
         else:
             print("W4-http-db skipped: DATABASE_URL is not set", flush=True)
             workloads.remove("W4-http-db")
 
     db = os.environ.get("DATABASE_URL")
-    (out / "run.json").write_text(json.dumps(
-        {"schema": "polyglot-benchmark-lab.run.v1", "started_at": stamp.isoformat(), "commit": commit,
-         "runner": info, "settings": s, "load_generator": f"oha {OHA_VERSION}",
-         "group": args.group, "lanes": args.lanes, "workloads": workloads,
-         "database": (("postgres service container" if os.environ.get("GITHUB_ACTIONS") else "local postgres") if db else None)}, indent=2) + "\n")
+    (out / "run.json").write_text(
+        json.dumps(
+            {
+                "schema": "polyglot-benchmark-lab.run.v1",
+                "started_at": stamp.isoformat(),
+                "commit": commit,
+                "runner": info,
+                "settings": s,
+                "load_generator": f"oha {OHA_VERSION}",
+                "group": args.group,
+                "lanes": args.lanes,
+                "workloads": workloads,
+                "database": (
+                    (
+                        "postgres service container"
+                        if os.environ.get("GITHUB_ACTIONS")
+                        else "local postgres"
+                    )
+                    if db
+                    else None
+                ),
+            },
+            indent=2,
+        )
+        + "\n"
+    )
 
     for lane_id in args.lanes:
         lane = LANES[lane_id]
         failures = check_lane(lane)
         version = runtime_version(lane)
-        print(f"{lane_id} ({version}): contract {'PASS' if not failures else 'FAIL'}", flush=True)
+        print(
+            f"{lane_id} ({version}): contract {'PASS' if not failures else 'FAIL'}",
+            flush=True,
+        )
         for wl in [w for w in workloads if w in lane.workloads]:
             result = {
-                "schema": SCHEMA, "workload": wl, "lane": lane_id, "commit": commit, "runner": info,
-                "group": args.group, "parent": lane.parent, "change": lane.change,
-                "runtime": {"language": lane.language, "version": version, "framework": lane.framework},
-                "settings": s, "contract_passed": not failures,
+                "schema": SCHEMA,
+                "workload": wl,
+                "lane": lane_id,
+                "commit": commit,
+                "runner": info,
+                "group": args.group,
+                "parent": lane.parent,
+                "change": lane.change,
+                "runtime": {
+                    "language": lane.language,
+                    "version": version,
+                    "framework": lane.framework,
+                },
+                "settings": s,
+                "contract_passed": not failures,
             }
             if failures:
                 result["contract_failures"] = failures
             else:
                 result["metrics"] = MEASURES[wl](lane, s)
-                print(f"  {wl}: {json.dumps(_headline(wl, result['metrics']))}", flush=True)
-            (out / f"{wl}.{lane_id}.json").write_text(json.dumps(result, indent=2) + "\n")
+                print(
+                    f"  {wl}: {json.dumps(_headline(wl, result['metrics']))}",
+                    flush=True,
+                )
+            (out / f"{wl}.{lane_id}.json").write_text(
+                json.dumps(result, indent=2) + "\n"
+            )
     print(f"results: {out}")
     return 0
 
 
 def _headline(wl: str, m: dict) -> dict:
     if wl in ("W3-http-read", "W4-http-db"):
-        return {"rps": round(m["rps"]["median"]), "p95_ms": round(m["p95_ms"]["median"], 2),
-                "rss_mib": round(m["peak_rss_mib"], 1), "errors": m["error_rate"]}
+        return {
+            "rps": round(m["rps"]["median"]),
+            "p95_ms": round(m["p95_ms"]["median"], 2),
+            "rss_mib": round(m["peak_rss_mib"], 1),
+            "errors": m["error_rate"],
+        }
     if wl == "W5-cold-start":
         return {"ready_ms": round(m["ready_ms"]["median"], 1)}
-    return {"wall_ms": round(m["wall_ms"]["median"], 1), "rss_mib": round(m["peak_rss_mib"], 1)}
+    return {
+        "wall_ms": round(m["wall_ms"]["median"], 1),
+        "rss_mib": round(m["peak_rss_mib"], 1),
+    }
 
 
 if __name__ == "__main__":

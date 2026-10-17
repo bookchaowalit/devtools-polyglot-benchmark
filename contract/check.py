@@ -1,7 +1,7 @@
 """Contract checks every lane must pass before it is measured.
 
-    python contract/check.py                 # all lanes
-    python contract/check.py python-fastapi  # one lane
+python contract/check.py                 # all lanes
+python contract/check.py python-fastapi  # one lane
 """
 
 from __future__ import annotations
@@ -35,7 +35,9 @@ def check_lane(lane: Lane) -> list[str]:
     records = json.loads(records_path.read_text())
 
     env = {**os.environ, **lane.env}
-    out = subprocess.run(lane.w1 + [str(records_path)], capture_output=True, text=True, env=env)
+    out = subprocess.run(
+        lane.w1 + [str(records_path)], capture_output=True, text=True, env=env
+    )
     if out.returncode != 0:
         failures.append(f"W1 exit {out.returncode}: {out.stderr[-300:]}")
     elif json.loads(out.stdout) != expected_w1(records):
@@ -62,7 +64,9 @@ def check_lane(lane: Lane) -> list[str]:
             for path, status, body in cases:
                 got_status, got_body = _get(srv.url + path)
                 if (got_status, got_body) != (status, body):
-                    failures.append(f"W3 {path}: got {got_status} {str(got_body)[:120]}")
+                    failures.append(
+                        f"W3 {path}: got {got_status} {str(got_body)[:120]}"
+                    )
             if os.environ.get("DATABASE_URL"):
                 db_cases = [
                     ("/db/items?after=0&limit=3", 200, {"items": records[:3]}),
@@ -73,7 +77,9 @@ def check_lane(lane: Lane) -> list[str]:
                 for path, status, body in db_cases:
                     got_status, got_body = _get(srv.url + path)
                     if (got_status, got_body) != (status, body):
-                        failures.append(f"W4 {path}: got {got_status} {str(got_body)[:120]}")
+                        failures.append(
+                            f"W4 {path}: got {got_status} {str(got_body)[:120]}"
+                        )
     except (RuntimeError, TimeoutError) as err:
         failures.append(f"W3 server: {err}")
     return failures

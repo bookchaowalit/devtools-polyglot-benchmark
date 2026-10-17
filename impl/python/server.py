@@ -47,7 +47,13 @@ async def _open_pool(url: str):
     from psycopg.rows import dict_row
     from psycopg_pool import AsyncConnectionPool
 
-    p = AsyncConnectionPool(url, min_size=POOL_SIZE, max_size=POOL_SIZE, kwargs={"row_factory": dict_row}, open=False)
+    p = AsyncConnectionPool(
+        url,
+        min_size=POOL_SIZE,
+        max_size=POOL_SIZE,
+        kwargs={"row_factory": dict_row},
+        open=False,
+    )
     await p.open(wait=True)
     return p
 
@@ -70,7 +76,13 @@ async def lifespan(_: FastAPI):
         await pool.close()
 
 
-app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan, default_response_class=Response)
+app = FastAPI(
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
+    lifespan=lifespan,
+    default_response_class=Response,
+)
 
 
 @app.get("/health")
@@ -105,12 +117,22 @@ async def db_items(request: Request):
 
 
 if __name__ == "__main__":
-    options = {"host": "127.0.0.1", "port": int(os.environ["PORT"]), "log_level": "warning", "access_log": False}
+    options = {
+        "host": "127.0.0.1",
+        "port": int(os.environ["PORT"]),
+        "log_level": "warning",
+        "access_log": False,
+    }
     if LOOP == "uvloop":
         options.update(loop="uvloop", http="httptools")
     else:
         options.update(loop="asyncio", http="h11")
     if WORKERS > 1:
-        uvicorn.run("server:app", workers=WORKERS, app_dir=os.path.dirname(os.path.abspath(__file__)), **options)
+        uvicorn.run(
+            "server:app",
+            workers=WORKERS,
+            app_dir=os.path.dirname(os.path.abspath(__file__)),
+            **options,
+        )
     else:
         uvicorn.run(app, **options)

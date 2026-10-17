@@ -25,7 +25,9 @@ WRONG = Lane(
 class FixtureTest(unittest.TestCase):
     def test_lcg_is_stable(self):
         rng = Lcg(1)
-        self.assertEqual([rng.next() for _ in range(3)], [1015568748, 1586005467, 2165703038])
+        self.assertEqual(
+            [rng.next() for _ in range(3)], [1015568748, 1586005467, 2165703038]
+        )
 
     def test_expected_w1_shape(self):
         out = expected_w1(build_records())

@@ -36,12 +36,19 @@ def main() -> int:
     with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
         database = conn.execute("SELECT current_database()").fetchone()[0]
         if database != "bench":
-            print(f"refusing to seed database {database!r}: use a dedicated database named 'bench'", file=sys.stderr)
+            print(
+                f"refusing to seed database {database!r}: use a dedicated database named 'bench'",
+                file=sys.stderr,
+            )
             return 2
         conn.execute(DDL)
-        with conn.cursor().copy("COPY bench_items (id, name, price_cents, qty, tags) FROM STDIN") as copy:
+        with conn.cursor().copy(
+            "COPY bench_items (id, name, price_cents, qty, tags) FROM STDIN"
+        ) as copy:
             for r in records:
-                copy.write_row((r["id"], r["name"], r["price_cents"], r["qty"], r["tags"]))
+                copy.write_row(
+                    (r["id"], r["name"], r["price_cents"], r["qty"], r["tags"])
+                )
         conn.execute("ANALYZE bench_items")
         count = conn.execute("SELECT count(*) FROM bench_items").fetchone()[0]
     print(f"bench_items: {count} rows")
