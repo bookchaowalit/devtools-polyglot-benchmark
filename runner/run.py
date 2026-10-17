@@ -27,8 +27,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from contract.check import check_lane  # noqa: E402
-from contract.fixtures import BLOB_BYTES, ensure_blob, ensure_records  # noqa: E402
+from contract.check import check_lane
+from contract.fixtures import BLOB_BYTES, ensure_blob, ensure_records
 from runner.lanes import (
     GROUPS,
     LANES,
@@ -37,7 +37,7 @@ from runner.lanes import (
     lanes_in,
     load_cpus,
     runtime_version,
-)  # noqa: E402
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 OHA_VERSION = "1.16.0"
@@ -61,7 +61,11 @@ def oha_path() -> str:
 
 def git_commit() -> str:
     out = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True
+        ["git", "rev-parse", "HEAD"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
     )
     return out.stdout.strip() or "uncommitted"
 
@@ -100,6 +104,7 @@ def run_child(cmd: list[str], env: dict[str, str]) -> tuple[float, float]:
         start = time.perf_counter()
         proc = subprocess.run(
             [GNU_TIME, "-f", "%M", "-o", rss_file.name, *cmd],
+            check=False,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             env={**os.environ, **env},
@@ -260,7 +265,7 @@ def main() -> int:
 
     s = settings(args.quick)
     info = runner_info()
-    stamp = dt.datetime.now(dt.timezone.utc)
+    stamp = dt.datetime.now(dt.UTC)
     out = (
         args.out
         or ROOT

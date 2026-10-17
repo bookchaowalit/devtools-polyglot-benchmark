@@ -17,8 +17,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from contract.fixtures import ensure_blob, ensure_records, expected_w1  # noqa: E402
-from runner.lanes import LANES, Lane, Server  # noqa: E402
+from contract.fixtures import ensure_blob, ensure_records, expected_w1
+from runner.lanes import LANES, Lane, Server
 
 
 def _get(url: str) -> tuple[int, object]:
@@ -36,7 +36,11 @@ def check_lane(lane: Lane) -> list[str]:
 
     env = {**os.environ, **lane.env}
     out = subprocess.run(
-        lane.w1 + [str(records_path)], capture_output=True, text=True, env=env
+        lane.w1 + [str(records_path)],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
     )
     if out.returncode != 0:
         failures.append(f"W1 exit {out.returncode}: {out.stderr[-300:]}")
@@ -46,7 +50,9 @@ def check_lane(lane: Lane) -> list[str]:
     blob = ensure_blob()
     with blob.open("rb") as fh:
         want = hashlib.file_digest(fh, "sha256").hexdigest()
-    out = subprocess.run(lane.w2 + [str(blob)], capture_output=True, text=True, env=env)
+    out = subprocess.run(
+        lane.w2 + [str(blob)], check=False, capture_output=True, text=True, env=env
+    )
     if out.returncode != 0:
         failures.append(f"W2 exit {out.returncode}: {out.stderr[-300:]}")
     elif out.stdout.strip() != want:

@@ -6,9 +6,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from contract.check import check_lane  # noqa: E402
-from contract.fixtures import Lcg, build_records, expected_w1  # noqa: E402
-from runner.lanes import LANES, Lane  # noqa: E402
+from contract.check import check_lane
+from contract.fixtures import Lcg, build_records, expected_w1
+from runner.lanes import LANES, Lane
 
 PY = sys.executable
 WRONG = Lane(

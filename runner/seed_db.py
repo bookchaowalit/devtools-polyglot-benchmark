@@ -17,7 +17,7 @@ import psycopg
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from contract.fixtures import ensure_records  # noqa: E402
+from contract.fixtures import ensure_records
 
 DDL = """
 DROP TABLE IF EXISTS bench_items;

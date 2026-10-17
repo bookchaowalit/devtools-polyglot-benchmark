@@ -16,6 +16,7 @@ import time
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Self
 
 ROOT = Path(__file__).resolve().parent.parent
 PY = str(ROOT / "impl/python/.venv/bin/python")
@@ -362,7 +363,7 @@ class Server:
                 pass
         return total / 1024
 
-    def __enter__(self) -> "Server":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *exc: object) -> None:
