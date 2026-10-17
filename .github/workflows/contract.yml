@@ -15,7 +15,7 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_HOST_AUTH_METHOD: trust # throwaway service container, reachable only from this job
+          POSTGRES_HOST_AUTH_METHOD: trust # throwaway service container on the ephemeral runner VM
           POSTGRES_DB: bench
         ports:
           - 5432:5432
