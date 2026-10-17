@@ -1,0 +1,6 @@
+# OSV-Scanner exception (DevSecOps Phase 1): reviewed, with an expiry.
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0258"
+ignoreUntil = 2027-01-17T00:00:00Z
+reason = "h2 0.3.27 (unbounded empty DATA frames, HTTP/2 DoS) comes from actix-web 4 / actix-http 3, which require h2 ^0.3; the fix exists only in h2 0.4.16. The actix lane is a benchmark server bound to 127.0.0.1 inside CI, never deployed, and the oha load generator speaks HTTP/1.1. Revisit when actix-http moves to h2 0.4."

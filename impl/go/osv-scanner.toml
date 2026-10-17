@@ -1,0 +1,6 @@
+# OSV-Scanner exception (DevSecOps Phase 1): reviewed, with an expiry.
+
+[[IgnoredVulns]]
+id = "GO-2026-5932"
+ignoreUntil = 2027-01-17T00:00:00Z
+reason = "Advisory covers only the deprecated golang.org/x/crypto/openpgp packages, and has no fixed version. The Go lanes never import openpgp: x/crypto arrives only via gin -> go-playground/validator -> x/crypto/sha3 (go mod why). Re-check when this expires."
