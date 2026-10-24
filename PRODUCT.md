@@ -39,6 +39,8 @@ The owner, as evidence for language/framework choices and as a portfolio lab. No
 - No Sentry: the only "runtime" is the scheduled benchmark job. Lane servers live for seconds and
   an SDK would change what is measured; a failed run already fails the workflow.
 
+Sentry waiver: the only runtime is the scheduled benchmark job; lane servers live for seconds and an SDK would change what is measured, while a failed run already fails the workflow.
+
 ## Disposition
 
 Lab / showcase (product card verdict `showcase`). Keep; the weekly schedule keeps it current.
