@@ -1,0 +1,50 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W5-cold-start",
+  "lane": "python-fastapi+py313",
+  "commit": "f8b6a12a1f09c83b4b6d93f524eeb352132495b5",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor"
+  },
+  "group": "python-variants",
+  "parent": "python-fastapi",
+  "change": "CPython 3.13 instead of 3.12",
+  "runtime": {
+    "language": "python",
+    "version": "Python 3.13.17",
+    "framework": "fastapi+uvicorn"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "ready_ms": {
+      "median": 398.82839399979275,
+      "min": 393.1746460002614,
+      "max": 425.4977489999874,
+      "runs": [
+        403.5704660000192,
+        399.5491719997517,
+        398.053192000134,
+        396.743712999978,
+        409.4800060001944,
+        393.1746460002614,
+        398.1076159998338,
+        398.02352600008817,
+        425.4977489999874,
+        403.1991920001019
+      ]
+    }
+  }
+}
