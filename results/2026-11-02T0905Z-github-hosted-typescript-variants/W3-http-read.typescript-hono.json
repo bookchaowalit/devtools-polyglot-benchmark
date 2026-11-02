@@ -1,0 +1,83 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W3-http-read",
+  "lane": "typescript-hono",
+  "commit": "0543f5f47d4c5fb1adf67dd86d4678c30bf1b706",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor"
+  },
+  "group": "typescript-variants",
+  "parent": "typescript-fastify",
+  "change": "Hono (@hono/node-server) instead of Fastify",
+  "runtime": {
+    "language": "typescript",
+    "version": "v22.23.4",
+    "framework": "hono"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "rps": {
+      "median": 19056.511759188586,
+      "min": 19028.172505973638,
+      "max": 19188.9195232004,
+      "runs": [
+        19028.172505973638,
+        19105.85456709885,
+        19188.9195232004,
+        19042.11959942387,
+        19056.511759188586
+      ]
+    },
+    "p50_ms": {
+      "median": 2.505035,
+      "min": 2.4955480000000003,
+      "max": 2.517278,
+      "runs": [
+        2.517278,
+        2.505035,
+        2.4955480000000003,
+        2.4991950000000003,
+        2.508642
+      ]
+    },
+    "p95_ms": {
+      "median": 3.009249,
+      "min": 2.9666449999999998,
+      "max": 3.056498,
+      "runs": [
+        3.020059,
+        3.0089069999999998,
+        2.9666449999999998,
+        3.009249,
+        3.056498
+      ]
+    },
+    "p99_ms": {
+      "median": 5.003107,
+      "min": 4.987729,
+      "max": 5.022072,
+      "runs": [
+        5.022072,
+        5.003107,
+        4.987729,
+        4.994842,
+        5.00952
+      ]
+    },
+    "error_rate": 0.0,
+    "peak_rss_mib": 110.59765625
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W5-cold-start",
+  "lane": "python-fastapi+2workers",
+  "commit": "0543f5f47d4c5fb1adf67dd86d4678c30bf1b706",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "Intel(R) Xeon(R) 6973P-C"
+  },
+  "group": "python-variants",
+  "parent": "python-fastapi",
+  "change": "2 uvicorn workers (h11), 5 DB connections each",
+  "runtime": {
+    "language": "python",
+    "version": "Python 3.12.15",
+    "framework": "fastapi+uvicorn"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "ready_ms": {
+      "median": 772.3324754999794,
+      "min": 764.2284410001139,
+      "max": 787.4599540000418,
+      "runs": [
+        779.492141999981,
+        765.7532389998778,
+        766.6301059998659,
+        764.2284410001139,
+        783.3271270001205,
+        787.4599540000418,
+        769.1825019999214,
+        775.4824490000374,
+        765.2566379999826,
+        779.4740039998942
+      ]
+    }
+  }
+}

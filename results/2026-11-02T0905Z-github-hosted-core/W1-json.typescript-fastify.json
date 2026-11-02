@@ -1,0 +1,46 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W1-json",
+  "lane": "typescript-fastify",
+  "commit": "0543f5f47d4c5fb1adf67dd86d4678c30bf1b706",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor"
+  },
+  "group": "core",
+  "parent": null,
+  "change": "",
+  "runtime": {
+    "language": "typescript",
+    "version": "v22.23.4",
+    "framework": "fastify"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "wall_ms": {
+      "median": 51.50172100002237,
+      "min": 49.2757709999978,
+      "max": 52.0967649999875,
+      "runs": [
+        52.0967649999875,
+        51.50172100002237,
+        49.2757709999978,
+        49.573279000014736,
+        51.813262999985454
+      ]
+    },
+    "peak_rss_mib": 57.5
+  }
+}
