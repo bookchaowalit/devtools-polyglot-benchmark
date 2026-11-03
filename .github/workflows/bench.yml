@@ -1,8 +1,7 @@
 name: bench
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 2 * * 1" # Mondays 02:00 UTC
+  # Scheduled by the jobs queue (platform-jobs-worker job `polyglot-bench`, cron "0 2 * * 1" UTC (Mondays 02:00 UTC)), ADR-0008.
 permissions:
   contents: write
 concurrency:
