@@ -1,0 +1,50 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W5-cold-start",
+  "lane": "rust-actix",
+  "commit": "c1c73efca4afea60fa15a6f5df8420e73774cd18",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor"
+  },
+  "group": "go-rust-variants",
+  "parent": "rust-axum",
+  "change": "actix-web instead of axum",
+  "runtime": {
+    "language": "rust",
+    "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "framework": "actix-web"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "ready_ms": {
+      "median": 54.67362900003536,
+      "min": 53.92974400001549,
+      "max": 60.791622000124335,
+      "runs": [
+        53.92974400001549,
+        54.80916999999863,
+        59.37769499996648,
+        54.18124099992383,
+        54.33972299988454,
+        54.015213999946354,
+        60.791622000124335,
+        60.398943999871335,
+        59.30863200001113,
+        54.538088000072094
+      ]
+    }
+  }
+}
