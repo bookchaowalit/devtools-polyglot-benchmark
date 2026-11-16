@@ -1,0 +1,83 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W3-http-read",
+  "lane": "python-fastapi+2workers",
+  "commit": "34bd3f0891bb2dce7c5de5831a4345ab57ec66bd",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "Intel(R) Xeon(R) 6975P-C"
+  },
+  "group": "python-variants",
+  "parent": "python-fastapi",
+  "change": "2 uvicorn workers (h11), 5 DB connections each",
+  "runtime": {
+    "language": "python",
+    "version": "Python 3.12.16",
+    "framework": "fastapi+uvicorn"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "rps": {
+      "median": 1218.2359740855886,
+      "min": 1212.981321105546,
+      "max": 1218.380065862542,
+      "runs": [
+        1218.248723904524,
+        1218.2359740855886,
+        1218.380065862542,
+        1218.0496403925813,
+        1212.981321105546
+      ]
+    },
+    "p50_ms": {
+      "median": 40.996908,
+      "min": 40.996379,
+      "max": 41.005319,
+      "runs": [
+        40.996813,
+        40.996908,
+        40.996379,
+        40.997254,
+        41.005319
+      ]
+    },
+    "p95_ms": {
+      "median": 41.910612,
+      "min": 41.749443,
+      "max": 42.040338,
+      "runs": [
+        41.910612,
+        41.910167,
+        41.749443,
+        41.958303,
+        42.040338
+      ]
+    },
+    "p99_ms": {
+      "median": 42.024806999999996,
+      "min": 42.021355,
+      "max": 43.004214999999995,
+      "runs": [
+        42.024806999999996,
+        42.021471,
+        42.021355,
+        42.033754,
+        43.004214999999995
+      ]
+    },
+    "error_rate": 0.0,
+    "peak_rss_mib": 209.3671875
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W4-http-db",
+  "lane": "typescript-fastify+postgresjs",
+  "commit": "34bd3f0891bb2dce7c5de5831a4345ab57ec66bd",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor"
+  },
+  "group": "typescript-variants",
+  "parent": "typescript-fastify",
+  "change": "postgres.js instead of node-postgres (pg)",
+  "runtime": {
+    "language": "typescript",
+    "version": "v22.23.4",
+    "framework": "fastify"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "rps": {
+      "median": 3592.8248886869674,
+      "min": 3021.9268370584286,
+      "max": 4677.517219096518,
+      "runs": [
+        4677.517219096518,
+        4021.7768977906185,
+        3592.8248886869674,
+        3268.965135199391,
+        3021.9268370584286
+      ]
+    },
+    "p50_ms": {
+      "median": 13.758983,
+      "min": 10.539373,
+      "max": 16.354462,
+      "runs": [
+        10.539373,
+        12.292439,
+        13.758983,
+        15.132692,
+        16.354462
+      ]
+    },
+    "p95_ms": {
+      "median": 18.681894,
+      "min": 14.981517,
+      "max": 21.725157,
+      "runs": [
+        14.981517,
+        16.956780000000002,
+        18.681894,
+        20.259926,
+        21.725157
+      ]
+    },
+    "p99_ms": {
+      "median": 21.497111,
+      "min": 17.46526,
+      "max": 25.369286000000002,
+      "runs": [
+        17.46526,
+        19.582789,
+        21.497111,
+        23.318557,
+        25.369286000000002
+      ]
+    },
+    "error_rate": 0.0,
+    "peak_rss_mib": 171.75
+  }
+}
