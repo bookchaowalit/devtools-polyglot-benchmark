@@ -22,6 +22,11 @@ class SiteTest(unittest.TestCase):
             self.html, r"fonts\.googleapis|vercel-insights|speed-insights"
         )
 
+    def test_shell_copy_has_the_selected_period_ring_and_forced_colors_edge(self):
+        css = (SITE / "dashboard-shell.css").read_text()
+        self.assertIn("box-shadow: inset 0 0 0 2px var(--ds-fg)", css)
+        self.assertIn(".ds-segmented button { border: 1px solid ButtonText; }", css)
+
     def test_links_back_to_the_hub_and_redirects_more_projects(self):
         self.assertIn('href="https://bookchaowalit.com/"', self.html)
         redirects = json.loads((SITE / "vercel.json").read_text())["redirects"]

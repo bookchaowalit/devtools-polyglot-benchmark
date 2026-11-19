@@ -82,7 +82,9 @@
 .ds-segmented { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border-radius: 12px; background: var(--ds-selected); }
 .ds-segmented button { flex: 1 1 auto; min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: transparent; font-size: 14px; cursor: pointer; }
 .ds-segmented button:hover { background: var(--ds-hover); }
-.ds-segmented button[aria-pressed="true"] { background: var(--ds-surface); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / 12%); }
+/* The chosen period needs a 3:1 edge: the surface fill alone is ~1.22:1 on the track. A 2px --ds-fg ring is >12:1
+   on both in light and dark. */
+.ds-segmented button[aria-pressed="true"] { background: var(--ds-surface); font-weight: 600; box-shadow: inset 0 0 0 2px var(--ds-fg), 0 1px 3px rgb(0 0 0 / 12%); }
 
 /* Stat tiles */
 .ds-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
@@ -242,6 +244,10 @@ textarea.ds-input { min-height: 220px; resize: vertical; font-family: var(--font
    The chart's area fill would be forced to one solid colour over the grid, so it is left out; the line still draws. */
 @media (forced-colors: active) {
   .ds-row[aria-pressed="true"] { border-left: 3px solid Highlight; padding-left: 9px; }
+  /* The period switch: every button gets a system edge, the chosen one the Highlight pair (fill and shadow are gone). */
+  .ds-segmented button { border: 1px solid ButtonText; }
+  .ds-segmented button[aria-pressed="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; border: 2px solid Highlight; }
+  .ds-segmented button[aria-pressed="true"]:focus-visible { outline-color: CanvasText; }
   .ds-chart-area { fill: none; }
   /* Backgrounds all turn into one system colour, so the bar keeps its own pair: an outlined Canvas track, CanvasText fill. */
   .ds-meter, .ds-meter span { forced-color-adjust: none; }
