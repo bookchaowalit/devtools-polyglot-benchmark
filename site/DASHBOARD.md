@@ -28,7 +28,8 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
   with an ellipsis, inner labels that would still collide are left out (never the first or last one passed), so pass short `tickLabels`.
   When each value counts a time bucket, pass `buckets`: points sit at bucket centres, ticks on bucket edges.
   The y scale tops out at four round grid gaps (two significant digits) that reach `max`, and the
-  line uses the same top, so each label is the value of its grid line. Pass a short `yUnit` ("kWh") to print the unit
+  line uses the same top, so each label is the value of its grid line. Each label is centred on its line (zero-height
+  rows spaced edge to edge, no pixel offset), so it stays on it when the text is enlarged. Pass a short `yUnit` ("kWh") to print the unit
   above the y labels; the peak is always named in text above the plot ("Peak 94 kWh · 13:00"), shifted so it never
   runs past the plot's edges. The chart's `aria-label` says what it shows (low, peak).
 - **Breakdown list** beside the chart: name, one line of detail, value and a share bar. When a

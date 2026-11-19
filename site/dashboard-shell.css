@@ -128,7 +128,10 @@
 /* ChartPanel sets margin-left: X% and translateX(-X%): the label moves over the peak but its edges stay inside the plot.
    It is in the flow at its own width (max-content, at most the plot's), so with large text it wraps instead of being cut. */
 .ds-chart-peak-row span { display: block; width: max-content; max-width: 100%; }
-.ds-chart-y { grid-column: 1; grid-row: 2; display: flex; flex-direction: column-reverse; justify-content: space-between; margin: -7px 0; color: var(--ds-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.ds-chart-y { grid-column: 1; grid-row: 2; display: flex; flex-direction: column-reverse; justify-content: space-between; color: var(--ds-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+/* Each label is a zero-height row that space-between puts exactly on its grid line (0%, 25% ... 100% of the plot), and
+   its text is centred on that row, so it stays on its line at any text size (no fixed pixel offset to outgrow). */
+.ds-chart-y span { display: flex; align-items: center; justify-content: flex-end; height: 0; min-height: 0; white-space: nowrap; }
 .ds-chart svg { grid-column: 2; grid-row: 2; display: block; width: 100%; height: 100%; overflow: visible; }
 .ds-chart-grid line { stroke: var(--ds-chart-grid); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke; }
 .ds-chart-area { fill: var(--ds-chart-fill); stroke: none; }
