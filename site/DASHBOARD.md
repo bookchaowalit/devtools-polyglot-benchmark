@@ -30,12 +30,15 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
   The y scale tops out at four round grid gaps (two significant digits) that reach `max`, and the
   line uses the same top, so each label is the value of its grid line. Each label is centred on its line (zero-height
   rows spaced edge to edge, no pixel offset), so it stays on it when the text is enlarged. Pass a short `yUnit` ("kWh") to print the unit
-  above the y labels; the peak is always named in text above the plot ("Peak 94 kWh · 13:00"), shifted so it never
-  runs past the plot's edges. The chart's `aria-label` says what it shows (low, peak).
+  above the y labels; the peak is always named in text above the plot ("Peak 94 kWh · 13:00"), placed by two flex
+  spacers in the peak's ratio, so its box never runs past the plot's edges (no margin or transform, no sideways scroll). The chart's `aria-label` says what it shows (low, peak).
 - **Breakdown list** beside the chart: name, one line of detail, value and a share bar. When a
   row selects something it is a button with `aria-pressed`, and a callout under the list says
   what the selection means. A `.ds-dot` and its row's `.ds-meter` take the same `data-tone` (amber, green, blue, red, grey),
   so the colour means one thing; a row in a bad state (Down) gets a red bar, not the normal blue one.
+  The bar is `aria-hidden`, so when it means something the detail text does not already say (share of the busiest row),
+  put that value in the row as text (a `.ds-sr` span is enough). Bars keep 3:1 against their track (a selected row's
+  track is white with an edge), and in forced colors they draw as a CanvasText fill in an outlined Canvas track.
   Panels show in DOM order on every screen, so Tab order matches what is seen (no CSS `order`). When the visitor
   picks from a panel (listings, links, checks), put it first in the DOM so it leads on phones, and give the grid
   `ds-grid-narrow-first` if that panel should take the narrow column on wide screens.

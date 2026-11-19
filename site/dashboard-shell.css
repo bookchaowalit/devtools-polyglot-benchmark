@@ -16,7 +16,8 @@
  * Placeholders use --ds-muted (the browser default is ~3.3:1).
  * Dots and share bars use the tone tokens (--ds-amber 6.4:1, --ds-green 6.6:1, --ds-red 6.5:1, --ds-chart 4.7:1 on white),
  * so a coloured dot is a 3:1 graphic and its row's bar carries the same colour. A selected row's bar track is
- * --ds-meter-track-selected, which stays visible on --ds-selected (the normal track would be ~1.0:1 there).
+ * --ds-meter-track-selected with a --ds-field-line edge: white in light mode, so the bar keeps 3:1 or more against its
+ * track (--ds-chart 4.7:1; the old #c7c7cc track was 2.8:1), and #48484a in dark mode (3.0:1).
  */
 :root {
   --ds-bg: #f5f5f7;
@@ -33,7 +34,7 @@
   --ds-on-accent: #ffffff;
   --ds-field-line: #8e8e93;
   --ds-chart-grid: #7c7c80;
-  --ds-meter-track-selected: #c7c7cc;
+  --ds-meter-track-selected: #ffffff;
   --ds-green: #136c2e; --ds-green-bg: #e3f5e8;
   --ds-amber: #8a5300; --ds-amber-bg: #fdf0d5;
   --ds-grey: #515154; --ds-grey-bg: #ececf0;
@@ -124,10 +125,13 @@
 /* Rows: unit and peak label, plot, x labels. Each piece is placed, so leaving out the unit changes nothing else. */
 .ds-chart { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto 240px auto; column-gap: 8px; }
 .ds-chart-unit { grid-column: 1; grid-row: 1; color: var(--ds-muted); font-size: 12px; line-height: 1.34em; text-align: right; }
-.ds-chart-peak-row { grid-column: 2; grid-row: 1; min-width: 0; min-height: 1.34em; margin-bottom: 10px; color: var(--ds-fg); font-size: 12px; font-weight: 600; line-height: 1.34em; font-variant-numeric: tabular-nums; }
-/* ChartPanel sets margin-left: X% and translateX(-X%): the label moves over the peak but its edges stay inside the plot.
-   It is in the flow at its own width (max-content, at most the plot's), so with large text it wraps instead of being cut. */
-.ds-chart-peak-row span { display: block; width: max-content; max-width: 100%; }
+.ds-chart-peak-row { grid-column: 2; grid-row: 1; display: flex; min-width: 0; min-height: 1.34em; margin-bottom: 10px; color: var(--ds-fg); font-size: 12px; font-weight: 600; line-height: 1.34em; font-variant-numeric: tabular-nums; }
+/* ChartPanel sets --ds-peak-at (the peak's share of the axis, 0 to 1). Two spacers split the room the label leaves in
+   that ratio, so its left edge is X × (plot − label): over the peak, and its box never reaches past either edge of the
+   plot (no margin or transform to overflow, so no sideways scroll). The label shrinks and wraps with large text. */
+.ds-chart-peak-row::before { content: ""; flex: var(--ds-peak-at, 0) 1 0; }
+.ds-chart-peak-row::after { content: ""; flex: calc(1 - var(--ds-peak-at, 0)) 1 0; }
+.ds-chart-peak-row span { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .ds-chart-y { grid-column: 1; grid-row: 2; display: flex; flex-direction: column-reverse; justify-content: space-between; color: var(--ds-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
 /* Each label is a zero-height row that space-between puts exactly on its grid line (0%, 25% ... 100% of the plot), and
    its text is centred on that row, so it stays on its line at any text size (no fixed pixel offset to outgrow). */
@@ -167,7 +171,7 @@ button.ds-row:hover { background: var(--ds-hover); }
 .ds-row-value { grid-column: 2; grid-row: 1 / span 2; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .ds-meter { display: block; grid-column: 1 / -1; height: 6px; border-radius: 980px; background: var(--ds-grey-bg); overflow: hidden; }
 .ds-meter span { display: block; height: 100%; border-radius: inherit; background: var(--ds-chart); }
-.ds-row[aria-pressed="true"] .ds-meter { background: var(--ds-meter-track-selected); }
+.ds-row[aria-pressed="true"] .ds-meter { background: var(--ds-meter-track-selected); box-shadow: inset 0 0 0 1px var(--ds-field-line); }
 /* Tones: a dot and its row's bar share one token colour (each 3:1 or more on the surface). */
 .ds-dot { flex: none; display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; background: var(--ds-field-line); }
 .ds-dot[data-tone="amber"], .ds-meter[data-tone="amber"] span { background: var(--ds-amber); }
@@ -237,6 +241,10 @@ textarea.ds-input { min-height: 220px; resize: vertical; font-family: var(--font
 @media (forced-colors: active) {
   .ds-row[aria-pressed="true"] { border-left: 3px solid Highlight; padding-left: 9px; }
   .ds-chart-area { fill: none; }
+  /* Backgrounds all turn into one system colour, so the bar keeps its own pair: an outlined Canvas track, CanvasText fill. */
+  .ds-meter, .ds-meter span { forced-color-adjust: none; }
+  .ds-meter, .ds-row[aria-pressed="true"] .ds-meter { background: Canvas; box-shadow: none; outline: 1px solid CanvasText; }
+  .ds-meter span, .ds-meter[data-tone] span { background: CanvasText; }
 }
 
 /* The top bar is sticky: keep skip-link targets and keyboard-focused controls clear of it when the page scrolls to them.
