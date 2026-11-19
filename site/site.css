@@ -9,6 +9,10 @@ html { scroll-padding-top: 64px; }
 .pb-lede { max-width: 72ch; }
 .pb-cards { display: grid; gap: 16px; min-width: 0; }
 .pb-cards > * { min-width: 0; }
+/* Long repo links and the page title wrap instead of widening the page at large text sizes (WCAG 1.4.10). */
+.ds-main > .ds-note a, .ds-head h1, .pb-limits li { overflow-wrap: anywhere; }
+/* A verdict (value + pill) may take at most half the row, so the metric name keeps room at large text sizes. */
+.ds-row:has(> .pb-verdict) { grid-template-columns: minmax(0, 1fr) fit-content(50%); }
 .pb-what { margin: 2px 0 0; color: var(--ds-muted); font-size: 14px; line-height: 1.5; }
 .pb-metric { margin: 16px 0 4px; font-size: 15px; font-weight: 600; }
 .pb-lane { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; }

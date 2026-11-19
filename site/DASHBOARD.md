@@ -15,11 +15,12 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
   Its options wrap to a new row with large text (flex wrap, no fixed widths).
   Leave it out when the data has no periods (status) rather than show a switch that does nothing.
 - **At most four stat tiles**: label, value with its unit, and one line of context ("at 13:00").
+  A value that needs a look gets `tone` (a dot by the label) and says why in its note; long word values wrap inside the tile.
   On phones they become one grouped card with the value on the right, wrapping under the label
   when the text is enlarged.
 - **One main chart**, with a `Show table` switch so every value can be read without the drawing.
-  The switch is a native `<details>` in the panel head's flex row (its name stays `Show table`, the
-  browser announces open or closed), sized by its own text so it wraps under the title with large text;
+  The switch is a native `<details>` in the panel head's flex row (it reads `Show table` while closed and
+  `Show chart` while the table is open; the browser announces open or closed), sized by its own text so it wraps under the title with large text;
   the table opens without JavaScript and CSS (`:has`) hides the chart while it is open. A browser
   without `:has()` shows both and hides the switch (`@supports not selector(:has(*))`).
   The SVG only draws; axis labels are HTML, so they never stretch. Each x label is capped at the
@@ -27,17 +28,20 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
   with an ellipsis, inner labels that would still collide are left out (never the first or last one passed), so pass short `tickLabels`.
   When each value counts a time bucket, pass `buckets`: points sit at bucket centres, ticks on bucket edges.
   The y scale tops out at four round grid gaps (two significant digits) that reach `max`, and the
-  line uses the same top, so each label is the value of its grid line. The chart's `aria-label` says what it shows (low, peak).
+  line uses the same top, so each label is the value of its grid line. Pass a short `yUnit` ("kWh") to print the unit
+  above the y labels; the peak is always named in text above the plot ("Peak 94 kWh · 13:00"). The chart's `aria-label` says what it shows (low, peak).
 - **Breakdown list** beside the chart: name, one line of detail, value and a share bar. When a
   row selects something it is a button with `aria-pressed`, and a callout under the list says
-  what the selection means.
+  what the selection means. A `.ds-dot` and its row's `.ds-meter` take the same `data-tone` (amber, green, blue, red, grey),
+  so the colour means one thing; a row in a bad state (Down) gets a red bar, not the normal blue one.
+  When the visitor picks from a panel (listings, links, checks), give it `ds-phone-first` so it comes before the chart on one column.
 - **Inputs, when the page is a calculator** (SEO check, rental yield): labelled `ds-field`s in a
   panel, at most one filled `ds-button`, a `ds-range` slider with its value printed beside the label.
 - **Static rows** (`<li class="ds-row">`) for lists you only read, such as services or checks; the
   state goes in a `Pill` with a word (Up, Down, Pass, Fail).
 - **Colour is never the only signal**: dots sit next to names, the peak is named in text.
 - **Say where the data comes from** in a note under the panels (sample, live, how fresh).
-- **Floor:** text ≥ 12px, controls ≥ 44px, 3px focus ring, 4.5:1 text contrast (placeholders
+- **Floor:** the top bar wraps (brand over nav) at 200% text; text ≥ 12px, controls ≥ 44px, 3px focus ring, 4.5:1 text contrast (placeholders
   included) and 3:1 for chart lines, grid lines and input edges in light and dark, no horizontal
   scroll at 320px. A selected row shows the accent bar, not only a tint; in forced colors
   the bar is a real `Highlight` left border and the chart drops its area fill.
