@@ -94,6 +94,9 @@
 
 /* Panels */
 .ds-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+/* Panels keep DOM order on every screen (so Tab order matches what is seen). When the panel the visitor picks from
+   comes first in the DOM (it leads on phones), ds-grid-narrow-first gives it the narrow column on wide screens. */
+.ds-grid-narrow-first { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); }
 .ds-panel { min-width: 0; padding: 20px; border-radius: 18px; background: var(--ds-surface); box-shadow: var(--ds-shadow); }
 .ds-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 12px; }
 .ds-panel-head h2 { margin: 0; font-size: 17px; font-weight: 600; }
@@ -121,9 +124,10 @@
 /* Rows: unit and peak label, plot, x labels. Each piece is placed, so leaving out the unit changes nothing else. */
 .ds-chart { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto 240px auto; column-gap: 8px; }
 .ds-chart-unit { grid-column: 1; grid-row: 1; color: var(--ds-muted); font-size: 12px; line-height: 1.34em; text-align: right; }
-.ds-chart-peak-row { grid-column: 2; grid-row: 1; position: relative; height: 1.34em; margin-bottom: 10px; color: var(--ds-fg); font-size: 12px; font-weight: 600; line-height: 1.34em; font-variant-numeric: tabular-nums; }
-/* ChartPanel sets left: X% and translateX(-X%): the label moves over the peak but its edges stay inside the plot. */
-.ds-chart-peak-row span { position: absolute; top: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-chart-peak-row { grid-column: 2; grid-row: 1; min-width: 0; min-height: 1.34em; margin-bottom: 10px; color: var(--ds-fg); font-size: 12px; font-weight: 600; line-height: 1.34em; font-variant-numeric: tabular-nums; }
+/* ChartPanel sets margin-left: X% and translateX(-X%): the label moves over the peak but its edges stay inside the plot.
+   It is in the flow at its own width (max-content, at most the plot's), so with large text it wraps instead of being cut. */
+.ds-chart-peak-row span { display: block; width: max-content; max-width: 100%; }
 .ds-chart-y { grid-column: 1; grid-row: 2; display: flex; flex-direction: column-reverse; justify-content: space-between; margin: -7px 0; color: var(--ds-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
 .ds-chart svg { grid-column: 2; grid-row: 2; display: block; width: 100%; height: 100%; overflow: visible; }
 .ds-chart-grid line { stroke: var(--ds-chart-grid); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke; }
@@ -195,14 +199,12 @@ textarea.ds-input { min-height: 220px; resize: vertical; font-family: var(--font
 .ds-pill[data-tone="red"] { color: var(--ds-red); background: var(--ds-red-bg); }
 
 .ds-note { margin: 0; color: var(--ds-muted); font-size: 14px; line-height: 1.6; }
-.ds-foot { display: flex; flex-wrap: wrap; gap: 0 20px; width: min(1120px, 100%); margin: 0 auto; padding: 8px clamp(16px, 4vw, 32px) 32px; border-top: 1px solid var(--ds-line); font-size: 14px; }
-.ds-foot a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ds-muted); text-decoration: none; }
+.ds-foot { display: flex; flex-wrap: wrap; gap: 0 16px; width: min(1120px, 100%); margin: 0 auto; padding: 8px clamp(16px, 4vw, 32px) 32px; border-top: 1px solid var(--ds-line); font-size: 14px; }
+.ds-foot a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: var(--ds-muted); text-decoration: none; }
 .ds-foot a:hover { color: var(--ds-fg); text-decoration: underline; text-underline-offset: 3px; }
 
 @media (max-width: 899px) {
   .ds-grid { grid-template-columns: minmax(0, 1fr); }
-  /* A panel the visitor picks from (listings, links, checks) can come first once the grid is one column. */
-  .ds-grid > .ds-phone-first { order: -1; }
 }
 /* Four tiles on a tablet: two by two rather than three and one left alone. */
 @media (min-width: 561px) and (max-width: 899px) {

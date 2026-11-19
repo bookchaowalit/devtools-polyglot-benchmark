@@ -35,7 +35,9 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
   row selects something it is a button with `aria-pressed`, and a callout under the list says
   what the selection means. A `.ds-dot` and its row's `.ds-meter` take the same `data-tone` (amber, green, blue, red, grey),
   so the colour means one thing; a row in a bad state (Down) gets a red bar, not the normal blue one.
-  When the visitor picks from a panel (listings, links, checks), give it `ds-phone-first` so it comes before the chart on one column.
+  Panels show in DOM order on every screen, so Tab order matches what is seen (no CSS `order`). When the visitor
+  picks from a panel (listings, links, checks), put it first in the DOM so it leads on phones, and give the grid
+  `ds-grid-narrow-first` if that panel should take the narrow column on wide screens.
 - **Inputs, when the page is a calculator** (SEO check, rental yield): labelled `ds-field`s in a
   panel, at most one filled `ds-button`, a `ds-range` slider with its value printed beside the label.
 - **Static rows** (`<li class="ds-row">`) for lists you only read, such as services or checks; the
@@ -75,6 +77,7 @@ variable set lower down never reaches them.
 
 Found in review and left on purpose; later findings go here too rather than into another round.
 
+- Very small positive scales (max around 1e-20) round every grid gap to 0; dashboards here never chart such values.
 - The peak label and the table print raw numbers ("Peak 1064 clicks", "4555"); stat tiles use grouped ones ("8,420").
 - With 2× text at 320px, row names and details (`.ds-row-name`, `.ds-row-detail`, `overflow-wrap: anywhere`) can break
   mid-word ("Initia/l cash"); readable, nothing spills.
