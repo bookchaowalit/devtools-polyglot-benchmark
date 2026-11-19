@@ -149,7 +149,9 @@
    table keeps the full text. */
 .ds-chart-x span { position: absolute; top: 0; max-width: var(--ds-tick-room, 14%); overflow: hidden; text-overflow: ellipsis; transform: translateX(-50%); white-space: nowrap; }
 .ds-chart-x span[data-edge="start"] { transform: none; }
-.ds-chart-x span[data-edge="end"] { transform: translateX(-100%); }
+/* The end label is pinned to the right edge (right: 0), not pushed past it and pulled back with a transform, so its box
+   never reaches beyond the axis. !important beats the inline left that ChartPanel sets on every label. */
+.ds-chart-x span[data-edge="end"] { right: 0; left: auto !important; transform: none; }
 .ds-table-wrap { max-height: 300px; overflow: auto; border: 1px solid var(--ds-line); border-radius: 12px; }
 .ds-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
 .ds-table th, .ds-table td { padding: 10px 14px; border-bottom: 1px solid var(--ds-line); text-align: left; }

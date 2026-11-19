@@ -25,7 +25,8 @@ so the shell is copied in, not installed: take `app/dashboard-shell.css` and
   without `:has()` shows both and hides the switch (`@supports not selector(:has(*))`).
   The SVG only draws; axis labels are HTML, so they never stretch. Each x label is capped at the
   room its neighbours leave (`labelRoom`, from the real tick gaps; phones need twice the room) and cut
-  with an ellipsis, inner labels that would still collide are left out (never the first or last one passed), so pass short `tickLabels`.
+  with an ellipsis, inner labels that would still collide are left out (never the first or last one passed), so pass short `tickLabels`. The first label is anchored to the left edge and the
+  last to the right edge (`right: 0`, no transform), so neither box runs past the axis.
   When each value counts a time bucket, pass `buckets`: points sit at bucket centres, ticks on bucket edges.
   The y scale tops out at four round grid gaps (two significant digits) that reach `max`, and the
   line uses the same top, so each label is the value of its grid line. Each label is centred on its line (zero-height
