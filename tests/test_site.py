@@ -2,6 +2,8 @@
 
 import json
 import re
+import shutil
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -21,6 +23,13 @@ class SiteTest(unittest.TestCase):
         self.assertNotRegex(
             self.html, r"fonts\.googleapis|vercel-insights|speed-insights"
         )
+
+    def test_font_ships_with_the_full_ofl_text(self):
+        # OFL 1.1 condition 2: redistributed fonts carry the copyright notice and the license itself.
+        text = (SITE / "fonts" / "LICENSE.txt").read_text()
+        self.assertIn("Copyright (c) 2023 Vercel", text)
+        for heading in ("PREAMBLE", "DEFINITIONS", "PERMISSION AND CONDITIONS", "TERMINATION", "DISCLAIMER"):
+            self.assertIn(heading, text)
 
     def test_shell_copy_has_the_selected_period_ring_and_forced_colors_edge(self):
         css = (SITE / "dashboard-shell.css").read_text()
@@ -55,6 +64,20 @@ class SiteTest(unittest.TestCase):
             self.assertIn(text, script)
         # better / worse is written out, never colour alone
         self.assertRegex(script, r'word: better \? "better" : "worse"')
+
+    @unittest.skipUnless(shutil.which("node"), "needs Node.js to run site/app.js")
+    def test_only_the_run_picked_last_reaches_the_page(self):
+        # A slower answer (or failure) for a run picked earlier must not replace the run picked last.
+        out = subprocess.run(
+            ["node", str(Path(__file__).with_name("site_open_run.mjs"))],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+        )
+        seen = json.loads(out.stdout.strip().splitlines()[-1])
+        self.assertTrue(seen["late_success"].startswith("python · github runner"), seen)
+        self.assertTrue(seen["late_failure"].startswith("python · github runner"), seen)
 
     def test_no_text_below_12px_in_site_css(self):
         css = (SITE / "site.css").read_text()

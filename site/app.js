@@ -148,14 +148,19 @@
     document.getElementById("cards").replaceChildren();
   }
 
+  // Each openRun takes a number; only the latest one may touch the page, so a slower answer (or failure) for a run
+  // picked earlier never replaces the run picked last.
+  let latestRequest = 0;
   async function openRun(meta) {
+    const request = ++latestRequest;
     showMessage("Loading run…", `${meta.started_at.slice(0, 16).replace("T", " ")} UTC · ${meta.group || "core"}`);
     try {
       const res = await fetch(`data/runs/${encodeURIComponent(meta.id)}.json`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      renderRun(await res.json());
+      const run = await res.json();
+      if (request === latestRequest) renderRun(run);
     } catch (error) {
-      showMessage("This run could not be loaded", `${error.message}. Try another run or reload the page.`);
+      if (request === latestRequest) showMessage("This run could not be loaded", `${error.message}. Try another run or reload the page.`);
     }
   }
 
