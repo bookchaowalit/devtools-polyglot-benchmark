@@ -24,7 +24,9 @@ def collect() -> list[dict]:
         run = json.loads(run_file.read_text())
         if run["settings"].get("quick"):
             continue
-        results = [json.loads(p.read_text()) for p in sorted(run_file.parent.glob("W*.json"))]
+        results = [
+            json.loads(p.read_text()) for p in sorted(run_file.parent.glob("W*.json"))
+        ]
         runs.append({"id": run_file.parent.name, **run, "results": results})
     return runs
 
@@ -35,9 +37,13 @@ def main() -> int:
     shutil.rmtree(out, ignore_errors=True)
     (out / "runs").mkdir(parents=True)
     index = [{k: v for k, v in run.items() if k != "results"} for run in runs]
-    (out / "index.json").write_text(json.dumps({"schema": SCHEMA, "runs": index}, separators=(",", ":")) + "\n")
+    (out / "index.json").write_text(
+        json.dumps({"schema": SCHEMA, "runs": index}, separators=(",", ":")) + "\n"
+    )
     for run in runs:
-        (out / "runs" / f"{run['id']}.json").write_text(json.dumps(run, separators=(",", ":")) + "\n")
+        (out / "runs" / f"{run['id']}.json").write_text(
+            json.dumps(run, separators=(",", ":")) + "\n"
+        )
     print(f"{out.relative_to(ROOT)}: {len(runs)} run(s)")
     return 0
 

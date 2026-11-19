@@ -18,20 +18,35 @@ class SiteTest(unittest.TestCase):
         self.assertIn('href="#main"', self.html)
         self.assertIn('id="main"', self.html)
         self.assertTrue((SITE / "fonts" / "geist-latin.woff2").is_file())
-        self.assertNotRegex(self.html, r"fonts\.googleapis|vercel-insights|speed-insights")
+        self.assertNotRegex(
+            self.html, r"fonts\.googleapis|vercel-insights|speed-insights"
+        )
 
     def test_links_back_to_the_hub_and_redirects_more_projects(self):
         self.assertIn('href="https://bookchaowalit.com/"', self.html)
         redirects = json.loads((SITE / "vercel.json").read_text())["redirects"]
         self.assertIn(
-            {"source": "/more-projects", "destination": "https://bookchaowalit.com/", "permanent": True}, redirects
+            {
+                "source": "/more-projects",
+                "destination": "https://bookchaowalit.com/",
+                "permanent": True,
+            },
+            redirects,
         )
-        self.assertIn("polyglot-benchmark-lab.vercel.app/sitemap.xml", (SITE / "robots.txt").read_text())
+        self.assertIn(
+            "polyglot-benchmark-lab.vercel.app/sitemap.xml",
+            (SITE / "robots.txt").read_text(),
+        )
 
     def test_page_has_loading_and_failure_states(self):
         script = (SITE / "app.js").read_text()
         self.assertIn('role="status"', self.html)
-        for text in ("could not be loaded", "No published runs yet", "data/index.json", "data/runs/"):
+        for text in (
+            "could not be loaded",
+            "No published runs yet",
+            "data/index.json",
+            "data/runs/",
+        ):
             self.assertIn(text, script)
         # better / worse is written out, never colour alone
         self.assertRegex(script, r'word: better \? "better" : "worse"')

@@ -14,10 +14,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from runner import build_site
 
 
-def _write_run(root: Path, name: str, started_at: str, quick: bool, results: dict) -> None:
+def _write_run(
+    root: Path, name: str, started_at: str, quick: bool, results: dict
+) -> None:
     run_dir = root / "results" / name
     run_dir.mkdir(parents=True)
-    (run_dir / "run.json").write_text(json.dumps({"started_at": started_at, "settings": {"quick": quick}}))
+    (run_dir / "run.json").write_text(
+        json.dumps({"started_at": started_at, "settings": {"quick": quick}})
+    )
     for filename, body in results.items():
         (run_dir / filename).write_text(json.dumps(body))
 
@@ -32,7 +36,9 @@ class BuildSiteTest(unittest.TestCase):
         index = json.loads((data / "index.json").read_text())
         for run in index["runs"]:
             self.assertNotIn("results", run)
-            run["results"] = json.loads((data / "runs" / f"{run['id']}.json").read_text())["results"]
+            run["results"] = json.loads(
+                (data / "runs" / f"{run['id']}.json").read_text()
+            )["results"]
         return index
 
     def test_skips_quick_runs_and_sorts_by_start_time(self):
