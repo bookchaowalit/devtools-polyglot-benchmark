@@ -17,7 +17,7 @@ The owner, as evidence for language/framework choices and as a portfolio lab. No
 - 4 core lanes and 13 variant lanes (`runner/lanes.py`, code under `impl/`).
 - `contract/check.py` checks each lane's output exactly; a lane that fails gets no metrics.
 - `runner/run.py` measures (GNU time for RSS, `oha` for HTTP load, pinned CPU halves);
-  `runner/build_site.py` builds `site/data.json` from non-quick runs.
+  `runner/build_site.py` builds `site/data/index.json` (run list) and `site/data/runs/<id>.json` (one per run) from non-quick runs; the page fetches the list, then only the run you open.
 - `.github/workflows/bench.yml` runs every group on GitHub-hosted runners, manually and every
   Monday 02:00 UTC, and commits results back. On 2026-10-22 the page held 21 published runs, the
   latest from the scheduled run of 2026-10-19 (all recent bench runs succeeded).

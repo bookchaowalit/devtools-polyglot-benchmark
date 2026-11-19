@@ -3,216 +3,61 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Polyglot Benchmark Lab</title>
+<title>Polyglot Benchmark Lab | Bookchaowalit</title>
 <meta name="description" content="The same workloads, implemented per language and framework, contract-checked, then measured. Every number links to its run record.">
-<style>
-:root {
-  --bg: #f7f7f5; --surface: #ffffff; --text: #1b1b1f; --muted: #5f6368; --line: #e3e3df;
-  --accent: #2f5bd3; --bar: #2f5bd3; --bar-2: #c2410c; --whisker: #1b1b1f; --warn-bg: #fff7e6; --warn: #8a5300; --good: #15803d; --bad: #b91c1c;
-  --radius: 10px; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #111214; --surface: #1a1b1e; --text: #ececec; --muted: #a0a3a8; --line: #2c2e33;
-    --accent: #7ea2ff; --bar: #7ea2ff; --bar-2: #fb923c; --whisker: #ececec; --warn-bg: #2a2214; --warn: #f5c26b; --good: #4ade80; --bad: #f87171;
-  }
-}
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
-main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
-h1 { font-size: 1.9rem; margin: 0 0 4px; letter-spacing: -0.01em; }
-h2 { font-size: 1.15rem; margin: 0 0 4px; }
-p.lead { color: var(--muted); margin: 0 0 24px; max-width: 64ch; }
-.controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
-select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
-.grid { display: grid; gap: 16px; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 18px 14px; }
-.card .what { color: var(--muted); font-size: 0.9rem; margin: 0 0 12px; }
-.metric { margin: 10px 0 2px; font-size: 0.85rem; color: var(--muted); }
-.row { display: grid; grid-template-columns: 150px 1fr 110px; gap: 10px; align-items: center; margin: 4px 0; }
-.row .lane { font-family: var(--mono); font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row .val { font-family: var(--mono); font-size: 0.85rem; text-align: right; }
-svg.bar { width: 100%; height: 18px; display: block; }
-.note { background: var(--warn-bg); color: var(--warn); border-radius: var(--radius); padding: 12px 14px; font-size: 0.9rem; margin: 0 0 20px; }
-details { margin-top: 10px; font-size: 0.85rem; }
-summary { cursor: pointer; color: var(--accent); }
-pre { font-family: var(--mono); font-size: 0.78rem; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow-x: auto; }
-ul.limits { padding-left: 20px; color: var(--muted); }
-footer { margin-top: 32px; color: var(--muted); font-size: 0.85rem; }
-a { color: var(--accent); }
-.empty { color: var(--muted); }
-table.delta { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-table.delta th, table.delta td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
-table.delta th:first-child, table.delta td:first-child { text-align: left; white-space: normal; }
-table.delta td.lane { font-family: var(--mono); font-size: 0.8rem; }
-table.delta .change { display: block; color: var(--muted); font-family: inherit; font-size: 0.78rem; }
-.better { color: var(--good); font-weight: 600; } .worse { color: var(--bad); font-weight: 600; } .flat { color: var(--muted); }
-.scroll { overflow-x: auto; }
-@media (max-width: 560px) { .row { grid-template-columns: 1fr 90px; } .row svg.bar { grid-column: 1 / -1; grid-row: 2; } }
-</style>
+<link rel="canonical" href="https://polyglot-benchmark-lab.vercel.app/">
+<link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="dashboard-shell.css">
+<link rel="stylesheet" href="site.css">
 </head>
 <body>
-<main>
-  <h1>Polyglot Benchmark Lab</h1>
-  <p class="lead">Each language implements the same workloads. A lane has to pass the same contract tests before it is measured. Bars show the median of repeated runs, and the line on each bar spans min to max. Every number comes from a recorded run. A <em>variant</em> lane changes one thing against its parent and runs on the same machine, so it is shown as a percentage of the parent.</p>
+<div class="ds">
+  <a class="ds-skip" href="#main">Skip to content</a>
+  <header class="ds-top">
+    <div class="ds-brand">Polyglot Benchmark Lab<small>Same workloads, every language</small></div>
+    <nav aria-label="Site"><a href="https://bookchaowalit.com/">Bookchaowalit</a></nav>
+  </header>
 
-  <div class="controls">
-    <label for="run">Run</label>
-    <select id="run"></select>
-  </div>
-  <div id="run-note"></div>
-  <div class="grid" id="cards"></div>
+  <main id="main" tabindex="-1" class="ds-main">
+    <div class="ds-head">
+      <div>
+        <h1>Language and framework benchmarks</h1>
+        <p>Median of repeated runs, with the min–max range in text <span class="ds-pill" data-tone="green">Measured</span></p>
+      </div>
+      <label class="ds-field pb-run">Run
+        <select id="run" class="ds-input" disabled><option>Loading runs…</option></select>
+      </label>
+    </div>
 
-  <section class="card" style="margin-top:16px">
-    <h2>What these results cannot tell you</h2>
-    <ul class="limits">
-      <li>GitHub-hosted runners are shared VMs. Runs on different days can differ by more than the gap between lanes, so compare within one run.</li>
-      <li>The load generator and the server share one machine, each pinned to half the cores. A production host with its own network behaves differently.</li>
-      <li>Each lane uses its language's default libraries and one process. Tuned setups (more workers, faster JSON libraries, uvloop) would be new lanes, not these numbers.</li>
-      <li>Lanes use their runtime's default concurrency on the cores they are given (2). Go and Rust spread across both cores; one Node process and one uvicorn worker use one. That is the out-of-the-box behavior, not an equal-threads comparison.</li>
-      <li>In W4, PostgreSQL runs on the same VM and is not pinned, so the database competes for CPU with the server and the load generator. W4 shows how each driver and pool behaves under a shared bottleneck, not each language's ceiling.</li>
-      <li>W2 depends on whether a lane's SHA-256 uses the CPU's SHA extensions (OpenSSL in Python and Node; Go and Rust have their own implementations). Results can flip between CPUs.</li>
-      <li>The h11 multi-worker variant is slow for a protocol reason, not a CPU one: uvicorn's worker mode leaves TCP_NODELAY off and h11 writes headers and body separately, so Nagle's algorithm and delayed ACK add about 40 ms per request. The uvloop + httptools worker variant shows what workers gain without that.</li>
-      <li>Higher throughput on these workloads does not make a language the better choice for a product. Developer time, ecosystem, and hosting cost decide that.</li>
-    </ul>
-  </section>
+    <p class="ds-note pb-lede">Each language implements the same workloads. A lane has to pass the same contract tests before it is measured. Every number comes from a recorded run. A <em>variant</em> lane changes one thing against its parent and runs on the same machine, so it is shown as a percentage of the parent.</p>
 
-  <footer>
-    Source, contract tests and raw result JSON: <a href="https://github.com/bookchaowalit/devtools-polyglot-benchmark">github.com/bookchaowalit/devtools-polyglot-benchmark</a>
+    <div id="status" class="ds-callout" role="status" aria-live="polite"><strong>Loading runs…</strong><span>Fetching the list of published runs.</span></div>
+    <div id="cards" class="pb-cards"></div>
+
+    <section class="ds-panel" aria-labelledby="limits-title">
+      <div class="ds-panel-head"><div><h2 id="limits-title">What these results cannot tell you</h2></div></div>
+      <ul class="pb-limits">
+        <li>GitHub-hosted runners are shared VMs. Runs on different days can differ by more than the gap between lanes, so compare within one run.</li>
+        <li>The load generator and the server share one machine, each pinned to half the cores. A production host with its own network behaves differently.</li>
+        <li>Each lane uses its language's default libraries and one process. Tuned setups (more workers, faster JSON libraries, uvloop) would be new lanes, not these numbers.</li>
+        <li>Lanes use their runtime's default concurrency on the cores they are given (2). Go and Rust spread across both cores; one Node process and one uvicorn worker use one. That is the out-of-the-box behavior, not an equal-threads comparison.</li>
+        <li>In W4, PostgreSQL runs on the same VM and is not pinned, so the database competes for CPU with the server and the load generator. W4 shows how each driver and pool behaves under a shared bottleneck, not each language's ceiling.</li>
+        <li>W2 depends on whether a lane's SHA-256 uses the CPU's SHA extensions (OpenSSL in Python and Node; Go and Rust have their own implementations). Results can flip between CPUs.</li>
+        <li>The h11 multi-worker variant is slow for a protocol reason, not a CPU one: uvicorn's worker mode leaves TCP_NODELAY off and h11 writes headers and body separately, so Nagle's algorithm and delayed ACK add about 40 ms per request. The uvloop + httptools worker variant shows what workers gain without that.</li>
+        <li>Higher throughput on these workloads does not make a language the better choice for a product. Developer time, ecosystem, and hosting cost decide that.</li>
+      </ul>
+    </section>
+
+    <p class="ds-note">Source, contract tests and raw result JSON: <a href="https://github.com/bookchaowalit/devtools-polyglot-benchmark">github.com/bookchaowalit/devtools-polyglot-benchmark</a>. Each run loads on its own, so opening the page fetches only the run list and the newest run.</p>
+  </main>
+
+  <footer class="ds-foot">
+    <a href="https://bookchaowalit.com/">More projects</a>
+    <a href="https://github.com/bookchaowalit/devtools-polyglot-benchmark">Source</a>
+    <a href="https://bookchaowalit.com/privacy">Privacy</a>
+    <a href="https://monitor.bookchaowalit.com/">Status</a>
   </footer>
-</main>
-<script>
-const WORKLOADS = [
-  { id: "W1-json", title: "W1 · JSON transform", what: "Parse 10,000 records, aggregate, sort, serialize. Each run is a fresh process.",
-    metrics: [{ key: "wall_ms", label: "Wall time (ms) — lower is better", fmt: v => v.toFixed(1) },
-              { key: "peak_rss_mib", label: "Peak RSS (MiB) — lower is better", fmt: v => v.toFixed(1), single: true, alt: true }] },
-  { id: "W2-hash", title: "W2 · SHA-256 of 100 MiB", what: "Stream a file in 1 MiB chunks and hash it.",
-    metrics: [{ key: "throughput_mib_s", label: "Throughput (MiB/s) — higher is better", fmt: v => v.toFixed(0) },
-              { key: "peak_rss_mib", label: "Peak RSS (MiB) — lower is better", fmt: v => v.toFixed(1), single: true, alt: true }] },
-  { id: "W3-http-read", title: "W3 · HTTP read", what: "GET /items/{id} from an in-memory store, 50 concurrent connections.",
-    metrics: [{ key: "rps", label: "Requests per second — higher is better", fmt: v => Math.round(v).toLocaleString("en-US") },
-              { key: "p95_ms", label: "p95 latency (ms) — lower is better", fmt: v => v.toFixed(2), alt: true },
-              { key: "peak_rss_mib", label: "Server peak RSS (MiB) — lower is better", fmt: v => v.toFixed(1), single: true, alt: true }] },
-  { id: "W4-http-db", title: "W4 · HTTP + PostgreSQL", what: "GET /db/items?after={id}&limit=50 — one indexed query per request, pool of 10 connections, 50 concurrent connections.",
-    metrics: [{ key: "rps", label: "Requests per second — higher is better", fmt: v => Math.round(v).toLocaleString("en-US") },
-              { key: "p95_ms", label: "p95 latency (ms) — lower is better", fmt: v => v.toFixed(2), alt: true },
-              { key: "peak_rss_mib", label: "Server peak RSS (MiB) — lower is better", fmt: v => v.toFixed(1), single: true, alt: true }] },
-  { id: "W5-cold-start", title: "W5 · Cold start", what: "Process start to first 200 on /health. This matters for services that sleep when idle.",
-    metrics: [{ key: "ready_ms", label: "Time to ready (ms) — lower is better", fmt: v => v.toFixed(0) }] },
-];
-
-const el = (tag, attrs = {}, text) => { const n = document.createElement(tag); Object.assign(n, attrs); if (text !== undefined) n.textContent = text; return n; };
-
-function bar(value, lo, hi, max, alt) {
-  const ns = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(ns, "svg");
-  svg.setAttribute("class", "bar"); svg.setAttribute("viewBox", "0 0 100 18"); svg.setAttribute("preserveAspectRatio", "none");
-  const pct = v => Math.max(0.5, (v / max) * 100);
-  const r = document.createElementNS(ns, "rect");
-  Object.entries({ x: 0, y: 3, height: 12, width: pct(value), rx: 1.5, fill: alt ? "var(--bar-2)" : "var(--bar)" }).forEach(([k, v]) => r.setAttribute(k, v));
-  svg.appendChild(r);
-  if (lo !== undefined && hi !== undefined && hi > lo) {
-    const l = document.createElementNS(ns, "line");
-    Object.entries({ x1: pct(lo), x2: pct(hi), y1: 9, y2: 9, stroke: "var(--whisker)", "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" }).forEach(([k, v]) => l.setAttribute(k, v));
-    svg.appendChild(l);
-  }
-  return svg;
-}
-
-const DELTAS = [
-  { wl: "W1-json", key: "wall_ms", label: "W1 wall", higher: false },
-  { wl: "W3-http-read", key: "rps", label: "W3 RPS", higher: true },
-  { wl: "W3-http-read", key: "p95_ms", label: "W3 p95", higher: false },
-  { wl: "W4-http-db", key: "rps", label: "W4 RPS", higher: true },
-  { wl: "W4-http-db", key: "p95_ms", label: "W4 p95", higher: false },
-  { wl: "W4-http-db", key: "peak_rss_mib", label: "W4 RSS", higher: false, single: true },
-  { wl: "W5-cold-start", key: "ready_ms", label: "Cold start", higher: false },
-];
-
-function metricOf(run, lane, d) {
-  const r = run.results.find(x => x.lane === lane && x.workload === d.wl && x.metrics);
-  if (!r) return undefined;
-  const v = r.metrics[d.key];
-  return d.single ? v : v.median;
-}
-
-function renderVariants(run) {
-  const byLane = new Map(run.results.filter(r => r.parent).map(r => [r.lane, r]));
-  const variants = (run.lanes || [...byLane.keys()]).filter(l => byLane.has(l)).map(l => byLane.get(l));
-  if (!variants.length) return null;
-  const card = el("section", { className: "card" });
-  card.append(el("h2", {}, "Variants vs parent"),
-    el("p", { className: "what" }, "Each variant changes one thing. Green means better than the parent in this run, red worse; differences under 3% are within run-to-run noise and shown grey."));
-  const table = el("table", { className: "delta" });
-  const head = el("tr");
-  head.append(el("th", {}, "Variant"), ...DELTAS.map(d => el("th", {}, d.label)));
-  table.append(head);
-  for (const v of variants) {
-    const tr = el("tr");
-    const name = el("td", { className: "lane" }, v.lane);
-    name.append(el("span", { className: "change" }, v.change));
-    tr.append(name);
-    for (const d of DELTAS) {
-      const a = metricOf(run, v.parent, d), b = metricOf(run, v.lane, d);
-      if (a === undefined || b === undefined) { tr.append(el("td", { className: "flat" }, "—")); continue; }
-      const pct = (b / a - 1) * 100;
-      const good = d.higher ? pct > 0 : pct < 0;
-      const cls = Math.abs(pct) < 3 ? "flat" : good ? "better" : "worse";
-      tr.append(el("td", { className: cls, title: `${a.toFixed(2)} → ${b.toFixed(2)}` }, `${pct > 0 ? "+" : ""}${pct.toFixed(0)}%`));
-    }
-    table.append(tr);
-  }
-  const wrap = el("div", { className: "scroll" });
-  wrap.append(table);
-  card.append(wrap);
-  return card;
-}
-
-function render(run) {
-  const cards = document.getElementById("cards");
-  cards.replaceChildren();
-  const note = document.getElementById("run-note");
-  note.replaceChildren();
-  const r = run.runner;
-  note.appendChild(el("p", { className: "note" },
-    `${run.group || "core"} · ${r.kind} runner · ${r.cpu_model || r.machine} · ${r.vcpu} vCPU · commit ${run.commit.slice(0, 7)} · ${run.settings.repeats} repeats · load generator ${run.load_generator}`));
-  const variants = renderVariants(run);
-  if (variants) cards.append(variants);
-
-  for (const w of WORKLOADS) {
-    const rows = run.results.filter(x => x.workload === w.id);
-    const card = el("section", { className: "card" });
-    card.append(el("h2", {}, w.title), el("p", { className: "what" }, w.what));
-    if (!rows.length) { card.append(el("p", { className: "empty" }, "Not measured in this run.")); cards.append(card); continue; }
-    for (const m of w.metrics) {
-      card.append(el("div", { className: "metric" }, m.label));
-      const vals = rows.filter(x => x.metrics).map(x => {
-        const v = x.metrics[m.key];
-        return m.single ? { lane: x.lane, v } : { lane: x.lane, v: v.median, lo: v.min, hi: v.max };
-      });
-      const max = Math.max(...vals.map(x => x.hi ?? x.v)) * 1.05;
-      for (const x of vals) {
-        const row = el("div", { className: "row" });
-        row.append(el("span", { className: "lane", title: x.lane }, x.lane), bar(x.v, x.lo, x.hi, max, m.alt), el("span", { className: "val" }, m.fmt(x.v)));
-        card.append(row);
-      }
-      for (const x of rows.filter(x => !x.metrics)) card.append(el("p", { className: "empty" }, `${x.lane}: failed the contract, so it was not measured.`));
-    }
-    const d = el("details");
-    d.append(el("summary", {}, "Run record"), el("pre", {}, JSON.stringify(rows.map(x => ({ lane: x.lane, runtime: x.runtime, contract_passed: x.contract_passed, metrics: x.metrics })), null, 2)));
-    card.append(d);
-    cards.append(card);
-  }
-}
-
-fetch("data.json").then(r => r.json()).then(data => {
-  const select = document.getElementById("run");
-  const runs = data.runs.slice().reverse();
-  if (!runs.length) { document.getElementById("cards").append(el("p", { className: "empty" }, "No published runs yet.")); return; }
-  runs.forEach((run, i) => select.append(el("option", { value: i }, `${run.started_at.slice(0, 16).replace("T", " ")} UTC · ${run.group || "core"} (${run.runner.kind})`)));
-  select.addEventListener("change", () => render(runs[select.value]));
-  render(runs[0]);
-});
-</script>
+</div>
+<script src="app.js" defer></script>
 </body>
 </html>

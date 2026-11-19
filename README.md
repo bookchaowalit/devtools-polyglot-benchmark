@@ -71,7 +71,7 @@ python -m unittest discover -s tests       # contract, including a deliberately 
 python runner/run.py --quick --out .cache/quick   # smoke run, never published
 python runner/run.py --group core           # full run → results/<time>-<runner>-core/
 python runner/run.py --group python-variants
-python runner/build_site.py                # results → site/data.json
+python runner/build_site.py                # results → site/data/ (index.json + runs/<id>.json)
 ```
 
 ## How it measures

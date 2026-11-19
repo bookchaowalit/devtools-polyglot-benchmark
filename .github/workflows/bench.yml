@@ -91,7 +91,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results site/data.json
+          git add -A results site/data
           git diff --cached --quiet || git commit -m "results: $(date -u +%Y-%m-%d) github-hosted run"
           # main may have moved while the bench jobs ran
           git pull --rebase origin main

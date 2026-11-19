@@ -1,0 +1,26 @@
+/* Polyglot Benchmark Lab on the Dashboard shell (dashboard-shell.css is a byte-identical copy). */
+@font-face { font-family: "Geist"; src: url("fonts/geist-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { --font-geist-sans: "Geist"; }
+html, body { margin: 0; background: var(--ds-bg); }
+html { scroll-padding-top: 64px; }
+
+.pb-run { flex: 0 1 380px; min-width: 0; max-width: 100%; }
+.pb-run select { max-width: 100%; text-overflow: ellipsis; }
+.pb-lede { max-width: 72ch; }
+.pb-cards { display: grid; gap: 16px; min-width: 0; }
+.pb-cards > * { min-width: 0; }
+.pb-what { margin: 2px 0 0; color: var(--ds-muted); font-size: 14px; line-height: 1.5; }
+.pb-metric { margin: 16px 0 4px; font-size: 15px; font-weight: 600; }
+.pb-lane { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; }
+.pb-verdict { display: inline-flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.pb-variant + .pb-variant { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--ds-line); }
+.pb-variant h3 { margin: 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.pb-variant p { margin: 2px 0 8px; color: var(--ds-muted); font-size: 14px; }
+.pb-empty { margin: 8px 0 0; color: var(--ds-muted); font-size: 14px; }
+.pb-record { margin-top: 12px; }
+.pb-record summary { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; margin-left: -12px; border-radius: 980px; color: var(--ds-accent); font-size: 15px; cursor: pointer; }
+.pb-record summary:hover { background: var(--ds-hover); }
+.pb-record pre { max-height: 360px; margin: 8px 0 0; padding: 12px; overflow: auto; border: 1px solid var(--ds-line); border-radius: 12px; background: var(--ds-bg); font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.pb-limits { margin: 0; padding-left: 20px; color: var(--ds-muted); font-size: 15px; line-height: 1.6; }
+.pb-limits li + li { margin-top: 6px; }
+@media (max-width: 640px) { .pb-run { flex-basis: 100%; } .pb-record summary { margin-left: 0; } }

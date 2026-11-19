@@ -25,7 +25,7 @@ jobs:
       # the Python, TypeScript, Go and Rust servers against PostgreSQL, so it runs in contract.yml;
       # the stdlib-only unit tests (lane registry, site builder, summary maths) also run here.
       install-command: ""
-      test-command: python3 -m unittest -v tests.test_lanes tests.test_build_site tests.test_run_helpers
+      test-command: python3 -m unittest -v tests.test_lanes tests.test_build_site tests.test_run_helpers tests.test_site
 
   typescript:
     uses: bookchaowalit/platform-ci-workflows/.github/workflows/ci-node.yml@87dc5e1c7e0416886a6371d5a101bb2ccba38edd # v1.1.1

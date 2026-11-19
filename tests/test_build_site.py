@@ -1,4 +1,4 @@
-"""site/data.json is built only from published (non-quick) runs, oldest first."""
+"""site/data/ is built only from published (non-quick) runs, oldest first: a small index plus one file per run."""
 
 import json
 import sys
@@ -14,24 +14,26 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from runner import build_site
 
 
-def _write_run(
-    root: Path, name: str, started_at: str, quick: bool, results: dict
-) -> None:
+def _write_run(root: Path, name: str, started_at: str, quick: bool, results: dict) -> None:
     run_dir = root / "results" / name
     run_dir.mkdir(parents=True)
-    (run_dir / "run.json").write_text(
-        json.dumps({"started_at": started_at, "settings": {"quick": quick}})
-    )
+    (run_dir / "run.json").write_text(json.dumps({"started_at": started_at, "settings": {"quick": quick}}))
     for filename, body in results.items():
         (run_dir / filename).write_text(json.dumps(body))
 
 
 class BuildSiteTest(unittest.TestCase):
     def build(self, root: Path) -> dict:
-        (root / "site").mkdir()
+        """Return the index with each run's results read back from its own file."""
+        (root / "site").mkdir(exist_ok=True)
         with mock.patch.object(build_site, "ROOT", root), redirect_stdout(StringIO()):
             self.assertEqual(build_site.main(), 0)
-        return json.loads((root / "site" / "data.json").read_text())
+        data = root / "site" / "data"
+        index = json.loads((data / "index.json").read_text())
+        for run in index["runs"]:
+            self.assertNotIn("results", run)
+            run["results"] = json.loads((data / "runs" / f"{run['id']}.json").read_text())["results"]
+        return index
 
     def test_skips_quick_runs_and_sorts_by_start_time(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -58,7 +60,7 @@ class BuildSiteTest(unittest.TestCase):
                 {"W1-json.x.json": {"v": 3}},
             )
             data = self.build(root)
-        self.assertEqual(data["schema"], "polyglot-benchmark-lab.site.v1")
+        self.assertEqual(data["schema"], "polyglot-benchmark-lab.site.v2")
         self.assertEqual([r["id"] for r in data["runs"]], ["a-early", "b-late"])
         self.assertEqual(data["runs"][0]["results"], [{"v": 1}])
 
@@ -84,6 +86,16 @@ class BuildSiteTest(unittest.TestCase):
             root = Path(tmp)
             (root / "results").mkdir()
             self.assertEqual(self.build(root)["runs"], [])
+
+    def test_rebuild_drops_runs_that_are_gone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            stale = root / "site" / "data" / "runs"
+            stale.mkdir(parents=True)
+            (stale / "old.json").write_text("{}")
+            (root / "results").mkdir()
+            self.build(root)
+            self.assertEqual(list(stale.iterdir()), [])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,216 @@
+/*
+ * Dashboard shell (2026-11-15): the shared calm, Apple-like look for read-only data pages
+ * (energy, status, uptime, analytics, small calculators). A head with one period switch, up to four
+ * stat tiles, one main chart with a table view, a breakdown list, and plain form fields for inputs. Same palette as the App shell
+ * (app-shell.css), with a --ds-* prefix so both can live in one app. Copy this file and
+ * components/dashboard-shell.tsx into the next dashboard; see DASHBOARD.md.
+ *
+ * Text pairs pass 4.5:1 in both themes: --ds-muted on --ds-surface 5.1:1 (light) / 6.6:1 (dark),
+ * --ds-muted on --ds-bg 4.7:1 / 8.2:1, --ds-accent on --ds-surface 5.6:1 / 5.6:1,
+ * --ds-grey on --ds-selected 6.5:1 / 8.3:1 (--ds-muted there is only 4.15:1, so selected rows use --ds-grey);
+ * pill text on its tint 5.6–8.3:1; --ds-on-accent on --ds-accent 5.6:1 / 7.0:1; field borders (--ds-field-line) on the
+ * surface 3.3:1 / 4.0:1 (input edges need 3:1); chart grid lines (--ds-chart-grid) on the chart's filled area
+ * 3.6:1 / 4.1:1 and on the bare surface 4.2:1 / 5.2:1, dashed so they stay light.
+ * Chart line (--ds-chart) on the surface is 4.7:1 / 5.6:1 (graphics need 3:1). A selected row shows an --ds-accent bar
+ * (4.6:1 / 4.6:1 on --ds-selected) as well as the tint, so the choice never rests on a 1.2:1 background alone.
+ * Placeholders use --ds-muted (the browser default is ~3.3:1).
+ */
+:root {
+  --ds-bg: #f5f5f7;
+  --ds-surface: #ffffff;
+  --ds-fg: #1d1d1f;
+  --ds-muted: #6e6e73;
+  --ds-line: #d2d2d7;
+  --ds-hover: rgb(0 0 0 / 5%);
+  --ds-selected: #e8e8ed;
+  --ds-accent: #0066cc;
+  --ds-chart: #0071e3;
+  --ds-chart-fill: rgb(0 113 227 / 10%);
+  --ds-focus: #0071e3;
+  --ds-on-accent: #ffffff;
+  --ds-field-line: #8e8e93;
+  --ds-chart-grid: #7c7c80;
+  --ds-green: #136c2e; --ds-green-bg: #e3f5e8;
+  --ds-amber: #8a5300; --ds-amber-bg: #fdf0d5;
+  --ds-grey: #515154; --ds-grey-bg: #ececf0;
+  --ds-red: #b3261e; --ds-red-bg: #fde8e6;
+  --ds-shadow: 0 1px 2px rgb(0 0 0 / 4%), 0 8px 24px rgb(0 0 0 / 6%);
+  --ds-font: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ds-bg: #000000; --ds-surface: #1c1c1e; --ds-fg: #f5f5f7; --ds-muted: #a1a1a6; --ds-line: #38383a;
+    --ds-hover: rgb(255 255 255 / 6%); --ds-selected: #2c2c2e; --ds-accent: #2997ff; --ds-chart: #2997ff; --ds-chart-fill: rgb(41 151 255 / 16%); --ds-focus: #2997ff;
+    --ds-on-accent: #000000; --ds-field-line: #7c7c80; --ds-chart-grid: #8e8e93;
+    --ds-green: #30d158; --ds-green-bg: #0f2e18; --ds-amber: #ffd60a; --ds-amber-bg: #3a2e00; --ds-grey: #c7c7cc; --ds-grey-bg: #2c2c2e; --ds-red: #ff8a80; --ds-red-bg: #3b1513;
+    --ds-shadow: none;
+  }
+}
+
+.ds { min-height: 100vh; background: var(--ds-bg); color: var(--ds-fg); font-family: var(--ds-font); -webkit-font-smoothing: antialiased; }
+.ds *, .ds *::before, .ds *::after { box-sizing: border-box; }
+:where(.ds) :where(button, input, select, textarea) { font: inherit; color: inherit; }
+:where(.ds) :focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
+.ds-skip { position: absolute; left: 8px; top: -64px; z-index: 50; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 980px; background: var(--ds-surface); border: 2px solid var(--ds-focus); color: var(--ds-fg); }
+.ds-skip:focus { top: 8px; }
+.ds-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ds-main:focus { outline: none; }
+
+/* Top bar */
+.ds-top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 clamp(16px, 4vw, 32px); background: color-mix(in srgb, var(--ds-bg) 92%, transparent); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--ds-line); }
+.ds-brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; font-size: 17px; font-weight: 600; }
+.ds-brand small { overflow: hidden; color: var(--ds-muted); font-size: 13px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+.ds-top nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 980px; color: var(--ds-accent); font-size: 15px; text-decoration: none; }
+.ds-top nav a:hover { background: var(--ds-hover); }
+
+/* Page */
+.ds-main { display: grid; gap: 16px; width: min(1120px, 100%); margin: 0 auto; padding: 24px clamp(16px, 4vw, 32px) 48px; }
+.ds-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; margin-bottom: 8px; }
+.ds-head > div:first-child { min-width: 0; }
+.ds-head h1 { margin: 0; font-size: clamp(28px, 4vw, 34px); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+.ds-head p { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 0; color: var(--ds-muted); font-size: 15px; }
+
+/* Period switch */
+/* Flex with wrap and no fixed widths: with large text the options wrap to a new row instead of running into each other. */
+.ds-segmented { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border-radius: 12px; background: var(--ds-selected); }
+.ds-segmented button { flex: 1 1 auto; min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: transparent; font-size: 14px; cursor: pointer; }
+.ds-segmented button:hover { background: var(--ds-hover); }
+.ds-segmented button[aria-pressed="true"] { background: var(--ds-surface); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / 12%); }
+
+/* Stat tiles */
+.ds-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.ds-stat { display: grid; gap: 4px; min-width: 0; padding: 16px 20px; border-radius: 18px; background: var(--ds-surface); box-shadow: var(--ds-shadow); }
+.ds-stat-label { color: var(--ds-muted); font-size: 13px; font-weight: 600; }
+.ds-stat-value { font-size: 30px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.ds-stat-value small { margin-left: 4px; color: var(--ds-muted); font-size: 15px; font-weight: 500; letter-spacing: 0; }
+.ds-stat-note { color: var(--ds-muted); font-size: 13px; }
+
+/* Panels */
+.ds-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.ds-panel { min-width: 0; padding: 20px; border-radius: 18px; background: var(--ds-surface); box-shadow: var(--ds-shadow); }
+.ds-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 12px; }
+.ds-panel-head h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.ds-panel-head p { margin: 2px 0 0; color: var(--ds-muted); font-size: 13px; }
+.ds-plain { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 980px; background: transparent; color: var(--ds-accent); font-size: 15px; cursor: pointer; }
+.ds-plain:hover { background: var(--ds-hover); }
+
+/* Chart panel: "Show table" is the summary of a native <details> (works without JavaScript) in the panel head's
+   flex row, sized by its own text, so with large text it wraps under the title instead of covering it.
+   :has() swaps the chart for the table while it is open; a browser without :has() simply shows both. */
+.ds-chart-switch { margin-left: auto; }
+.ds-chart-switch > summary { list-style: none; }
+.ds-chart-switch > summary::-webkit-details-marker { display: none; }
+.ds-chart-switch[open] > summary { background: var(--ds-hover); }
+.ds-chart-panel:has(.ds-chart-switch[open]) .ds-chart { display: none; }
+.ds-chart-panel:not(:has(.ds-chart-switch[open])) .ds-table-wrap { display: none; }
+/* Without :has() the chart and the table both show and the switch would change nothing, so it is hidden. */
+@supports not selector(:has(*)) {
+  .ds-chart-switch { display: none; }
+}
+
+/* Line chart: the SVG only draws; axis labels are HTML so they never stretch. */
+.ds-chart { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 240px auto; column-gap: 8px; }
+.ds-chart-y { display: flex; flex-direction: column-reverse; justify-content: space-between; margin: -7px 0; color: var(--ds-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.ds-chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ds-chart-grid line { stroke: var(--ds-chart-grid); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke; }
+.ds-chart-area { fill: var(--ds-chart-fill); stroke: none; }
+.ds-chart-line { fill: none; stroke: var(--ds-chart); stroke-width: 2.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+/* A single value: a zero-length line with round caps, so it stays a round dot on the stretched board. */
+.ds-chart-dot { stroke: var(--ds-chart); stroke-width: 10; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.ds-chart-peak { stroke: var(--ds-chart); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+.ds-chart-x { grid-column: 2; position: relative; height: 16px; margin-top: 8px; color: var(--ds-muted); font-size: 12px; line-height: 16px; font-variant-numeric: tabular-nums; }
+/* Each label is capped to the room its neighbours leave (--ds-tick-room, worked out by ChartPanel from the real
+   tick gaps) and cut with an ellipsis, so a long label never overlaps the next or pushes the page sideways; the
+   table keeps the full text. */
+.ds-chart-x span { position: absolute; top: 0; max-width: var(--ds-tick-room, 14%); overflow: hidden; text-overflow: ellipsis; transform: translateX(-50%); white-space: nowrap; }
+.ds-chart-x span[data-edge="start"] { transform: none; }
+.ds-chart-x span[data-edge="end"] { transform: translateX(-100%); }
+.ds-table-wrap { max-height: 300px; overflow: auto; border: 1px solid var(--ds-line); border-radius: 12px; }
+.ds-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.ds-table th, .ds-table td { padding: 10px 14px; border-bottom: 1px solid var(--ds-line); text-align: left; }
+.ds-table thead th { position: sticky; top: 0; background: var(--ds-surface); color: var(--ds-muted); font-size: 13px; font-weight: 600; }
+.ds-table td:last-child, .ds-table th:last-child { text-align: right; }
+.ds-table tr:last-child td, .ds-table tr:last-child th { border-bottom: 0; }
+.ds-table [data-peak="true"] { font-weight: 700; }
+
+/* Breakdown list: name, detail, value and a share bar. A <button class="ds-row"> selects something;
+   on an <li> or <div> the row is static (no hover). */
+.ds-rows { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.ds-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; width: 100%; min-height: 64px; padding: 10px 12px; border: 0; border-radius: 12px; background: transparent; text-align: left; }
+button.ds-row { cursor: pointer; }
+button.ds-row:hover { background: var(--ds-hover); }
+.ds-row[aria-pressed="true"] { background: var(--ds-selected); box-shadow: inset 3px 0 0 var(--ds-accent); }
+.ds-row-name { display: flex; align-items: center; min-width: 0; overflow-wrap: anywhere; font-size: 15px; font-weight: 600; }
+.ds-row-detail { grid-column: 1; min-width: 0; overflow-wrap: anywhere; color: var(--ds-muted); font-size: 13px; }
+.ds-row[aria-pressed="true"] .ds-row-detail, button.ds-row:hover .ds-row-detail { color: var(--ds-grey); }
+.ds-row-value { grid-column: 2; grid-row: 1 / span 2; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ds-meter { display: block; grid-column: 1 / -1; height: 6px; border-radius: 980px; background: var(--ds-grey-bg); overflow: hidden; }
+.ds-meter span { display: block; height: 100%; border-radius: inherit; background: var(--ds-chart); }
+.ds-dot { flex: none; display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; background: #8e8e93; }
+.ds-dot[data-tone="amber"] { background: #e0a100; }
+.ds-dot[data-tone="green"] { background: #34c759; }
+.ds-dot[data-tone="blue"] { background: #0a84ff; }
+.ds-dot[data-tone="red"] { background: #ff3b30; }
+
+/* Detail callout under the breakdown */
+.ds-callout { display: grid; gap: 4px; margin-top: 12px; padding: 14px 16px; border-radius: 12px; background: var(--ds-bg); }
+.ds-callout strong { font-size: 15px; }
+.ds-callout span { color: var(--ds-muted); font-size: 14px; line-height: 1.5; }
+.ds-callout a, .ds-note a { color: var(--ds-accent); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Inputs: labelled fields, one filled button per panel, a slider. */
+.ds-form { display: grid; gap: 16px; }
+.ds-field { display: grid; gap: 6px; color: var(--ds-muted); font-size: 13px; font-weight: 600; }
+.ds-field-row { display: flex; justify-content: space-between; gap: 12px; }
+.ds-field-row b { color: var(--ds-fg); font-size: 15px; font-variant-numeric: tabular-nums; }
+.ds-input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--ds-field-line); border-radius: 10px; background: var(--ds-surface); color: var(--ds-fg); font-size: 15px; font-weight: 400; }
+.ds-input::placeholder { color: var(--ds-muted); opacity: 1; }
+textarea.ds-input { min-height: 220px; resize: vertical; font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 1.5; }
+.ds-range { width: 100%; min-height: 44px; margin: 0; accent-color: var(--ds-accent); cursor: pointer; }
+.ds-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ds-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 20px; border: 0; border-radius: 980px; background: var(--ds-accent); color: var(--ds-on-accent); font-size: 15px; font-weight: 600; cursor: pointer; }
+.ds-button:hover { filter: brightness(1.08); }
+
+.ds-pill { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: 980px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.ds-pill[data-tone="green"] { color: var(--ds-green); background: var(--ds-green-bg); }
+.ds-pill[data-tone="amber"] { color: var(--ds-amber); background: var(--ds-amber-bg); }
+.ds-pill[data-tone="grey"] { color: var(--ds-grey); background: var(--ds-grey-bg); }
+.ds-pill[data-tone="red"] { color: var(--ds-red); background: var(--ds-red-bg); }
+
+.ds-note { margin: 0; color: var(--ds-muted); font-size: 14px; line-height: 1.6; }
+.ds-foot { display: flex; flex-wrap: wrap; gap: 0 20px; width: min(1120px, 100%); margin: 0 auto; padding: 8px clamp(16px, 4vw, 32px) 32px; border-top: 1px solid var(--ds-line); font-size: 14px; }
+.ds-foot a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ds-muted); text-decoration: none; }
+.ds-foot a:hover { color: var(--ds-fg); text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 899px) {
+  .ds-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .ds-brand small { display: none; }
+  .ds-head > .ds-segmented { width: 100%; }
+  .ds-panel { padding: 16px; }
+  .ds-chart { grid-template-rows: 200px auto; }
+  /* Phones keep fewer labels (ChartPanel marks the rest), each with the room the kept neighbours leave. */
+  .ds-chart-x span { max-width: var(--ds-tick-room-phone, 30%); }
+  .ds-chart-x span[data-phone="hide"] { display: none; }
+  /* Stat tiles become one grouped card: label and note on the left, value on the right. */
+  .ds-stats { grid-template-columns: minmax(0, 1fr); gap: 0; border-radius: 18px; background: var(--ds-surface); box-shadow: var(--ds-shadow); }
+  /* Flex with wrap: the value sits right of the label while both fit, and drops under it with large text. */
+  .ds-stat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; padding: 12px 16px; border-radius: 0; background: transparent; box-shadow: none; }
+  .ds-stat + .ds-stat { border-top: 1px solid var(--ds-line); }
+  .ds-stat-label { flex: 1 1 auto; font-size: 15px; color: var(--ds-fg); }
+  .ds-stat-value { margin-left: auto; font-size: 24px; }
+  .ds-stat-note { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .ds *, .ds *::before, .ds *::after { transition: none !important; } }
+/* Forced colors (Windows contrast themes) drop box-shadow and repaint backgrounds, which would erase the selected
+   row's inset bar: draw it as a real left border in the Highlight system colour instead (padding keeps the text put).
+   The chart's area fill would be forced to one solid colour over the grid, so it is left out; the line still draws. */
+@media (forced-colors: active) {
+  .ds-row[aria-pressed="true"] { border-left: 3px solid Highlight; padding-left: 9px; }
+  .ds-chart-area { fill: none; }
+}
+
+/* The top bar is sticky: keep skip-link targets and keyboard-focused controls clear of it when the page scrolls to them. */
+html { scroll-padding-top: 64px; scroll-padding-bottom: 16px; }
