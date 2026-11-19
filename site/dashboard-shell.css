@@ -122,9 +122,8 @@
 .ds-chart { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto 240px auto; column-gap: 8px; }
 .ds-chart-unit { grid-column: 1; grid-row: 1; color: var(--ds-muted); font-size: 12px; line-height: 1.34em; text-align: right; }
 .ds-chart-peak-row { grid-column: 2; grid-row: 1; position: relative; height: 1.34em; margin-bottom: 10px; color: var(--ds-fg); font-size: 12px; font-weight: 600; line-height: 1.34em; font-variant-numeric: tabular-nums; }
-.ds-chart-peak-row span { position: absolute; top: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; transform: translateX(-50%); white-space: nowrap; }
-.ds-chart-peak-row span[data-edge="start"] { transform: none; }
-.ds-chart-peak-row span[data-edge="end"] { transform: translateX(-100%); }
+/* ChartPanel sets left: X% and translateX(-X%): the label moves over the peak but its edges stay inside the plot. */
+.ds-chart-peak-row span { position: absolute; top: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ds-chart-y { grid-column: 1; grid-row: 2; display: flex; flex-direction: column-reverse; justify-content: space-between; margin: -7px 0; color: var(--ds-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
 .ds-chart svg { grid-column: 2; grid-row: 2; display: block; width: 100%; height: 100%; overflow: visible; }
 .ds-chart-grid line { stroke: var(--ds-chart-grid); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke; }
@@ -235,5 +234,6 @@ textarea.ds-input { min-height: 220px; resize: vertical; font-family: var(--font
   .ds-chart-area { fill: none; }
 }
 
-/* The top bar is sticky: keep skip-link targets and keyboard-focused controls clear of it when the page scrolls to them. */
-html { scroll-padding-top: 64px; scroll-padding-bottom: 16px; }
+/* The top bar is sticky: keep skip-link targets and keyboard-focused controls clear of it when the page scrolls to them.
+   DashTop measures the bar (it grows when it wraps with large text) into --ds-top-height; 64px covers the one-row bar without script. */
+html { scroll-padding-top: calc(var(--ds-top-height, 52px) + 12px); scroll-padding-bottom: 16px; }

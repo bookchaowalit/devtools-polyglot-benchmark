@@ -1,5 +1,14 @@
 // Polyglot Benchmark Lab page: loads data/index.json (the run list), then data/runs/<id>.json for the run you open.
 // Pure helpers are exported on window.PB for the Python smoke test's sake and for reading in the console.
+// Same as DashTop in the Dashboard shell: keep --ds-top-height equal to the sticky bar (taller when it wraps with large
+// text), so dashboard-shell.css's scroll-padding-top keeps focused controls clear of it.
+(function () {
+  var bar = document.querySelector(".ds-top");
+  if (!bar || !window.ResizeObserver || !document.adoptedStyleSheets || typeof CSSStyleSheet !== "function") return;
+  var sheet = new CSSStyleSheet();
+  document.adoptedStyleSheets = document.adoptedStyleSheets.concat(sheet);
+  new ResizeObserver(function () { sheet.replaceSync(":root{--ds-top-height:" + Math.ceil(bar.getBoundingClientRect().height) + "px}"); }).observe(bar);
+})();
 (function () {
   const WORKLOADS = [
     { id: "W1-json", title: "W1 · JSON transform", what: "Parse 10,000 records, aggregate, sort, serialize. Each run is a fresh process.",
