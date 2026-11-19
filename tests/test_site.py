@@ -28,7 +28,13 @@ class SiteTest(unittest.TestCase):
         # OFL 1.1 condition 2: redistributed fonts carry the copyright notice and the license itself.
         text = (SITE / "fonts" / "LICENSE.txt").read_text()
         self.assertIn("Copyright (c) 2023 Vercel", text)
-        for heading in ("PREAMBLE", "DEFINITIONS", "PERMISSION AND CONDITIONS", "TERMINATION", "DISCLAIMER"):
+        for heading in (
+            "PREAMBLE",
+            "DEFINITIONS",
+            "PERMISSION AND CONDITIONS",
+            "TERMINATION",
+            "DISCLAIMER",
+        ):
             self.assertIn(heading, text)
 
     def test_shell_copy_has_the_selected_period_ring_and_forced_colors_edge(self):
