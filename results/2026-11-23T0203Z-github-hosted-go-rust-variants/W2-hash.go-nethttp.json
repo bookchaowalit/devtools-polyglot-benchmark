@@ -1,0 +1,58 @@
+{
+  "schema": "polyglot-benchmark-lab.result.v1",
+  "workload": "W2-hash",
+  "lane": "go-nethttp",
+  "commit": "d2df879f9dd31eefc460ea70bbc2714d4cc73251",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "vcpu": 4,
+    "cpu_model": "Intel(R) Xeon(R) 6975P-C"
+  },
+  "group": "go-rust-variants",
+  "parent": null,
+  "change": "",
+  "runtime": {
+    "language": "go",
+    "version": "go version go1.27.2 linux/amd64",
+    "framework": "net/http"
+  },
+  "settings": {
+    "repeats": 5,
+    "cli_warmup": 2,
+    "http_seconds": 30,
+    "http_warmup_s": 10,
+    "concurrency": 50,
+    "cold_repeats": 10,
+    "quick": false
+  },
+  "contract_passed": true,
+  "metrics": {
+    "wall_ms": {
+      "median": 68.68247400001337,
+      "min": 68.1879520000166,
+      "max": 68.74748899997485,
+      "runs": [
+        68.74748899997485,
+        68.53014699998994,
+        68.68247400001337,
+        68.1879520000166,
+        68.69116299998268
+      ]
+    },
+    "throughput_mib_s": {
+      "median": 1455.9755083950606,
+      "min": 1454.5985817756425,
+      "max": 1466.5347332909437,
+      "runs": [
+        1454.5985817756425,
+        1459.2118122848135,
+        1455.9755083950606,
+        1466.5347332909437,
+        1455.791336653089
+      ]
+    },
+    "peak_rss_mib": 2.18359375
+  }
+}
